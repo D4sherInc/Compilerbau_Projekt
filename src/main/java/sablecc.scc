@@ -1,0 +1,36 @@
+Helpers
+    first_digit = ['1' .. '9'];
+    digit = ['0' + first_digit];
+    number = '0' | first_digit digit*;
+
+
+Tokens
+    using_symbol = 'using';
+    system_symbol = 'System';
+    namespace_symbol = 'namespace';
+    class_symbol = 'class';
+    semicolon = ';';
+    static_symbol = 'static';
+    void_symbol = '';
+    main_symbol = 'Main';
+    string_symbol = 'string';
+    console_symbol = 'Console';
+    writeLine_symbol = 'WriteLine';
+    one_line_comment_begin = '//';
+    multi_line_comment_begin = '/*';
+    multi_line_comment_end = '*/';
+    int_symbol = 'int';
+    double_symbol = 'double';
+    bool_symbol = 'bool';
+    l_brace = '{';
+    r_brace = '}';
+    l_par = '(';
+    r_par = ')';
+    l_bracket = '[';
+    r_bracket = ']';
+    double_value = ('-')? number? '.' digit+;
+    int_value = ('-')? number;
+
+    identifier =
+
+    dot_symbol = '.';

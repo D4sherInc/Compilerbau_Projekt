@@ -1,0 +1,20 @@
+# Default ignored files
+/shelf/
+/.idea/workspace.xml
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# every SableCC generated file
+/**/node/
+/**/analysis/
+/**/parser/
+/**/lexer/
+
+/.idea/
+/.gradle/
+
+# every generated class file
+*.class
