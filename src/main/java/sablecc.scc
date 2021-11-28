@@ -1,36 +1,97 @@
 Helpers
+    all_chars = [ 0 .. 65535 ];
     first_digit = ['1' .. '9'];
     digit = ['0' + first_digit];
-    number = '0' | first_digit digit*;
+    not_a_digit = ['_' + [['a' .. 'z'] + ['A' .. 'Z']]];
+    number = digit+;
+
+    lf = 10;
+    cr = 13;
+    next_line = 0x85;
+    line_separator = 0x2028;
+    paragraph_separator = 0x2029;
+    newline = ( lf | cr | cr lf | next_line | line_separator | paragraph_separator );
+    newline_chars = [[[[cr + lf] + next_line] + line_separator] + paragraph_separator];
+    input_char = [ all_chars - newline_chars ];
+    input_chars = input_char+;
+    not_slash_input_char = [ input_char - '/'];
+
+    tab = 9;
+    all_but_newline = [all_chars - newline];
+    all_but_star = [all_chars - '*'];
+    all_but_star_and_slash = [all_but_star - '/'];
 
 
 Tokens
-    using_symbol = 'using';
-    system_symbol = 'System';
-    namespace_symbol = 'namespace';
-    class_symbol = 'class';
+    // static names
+    using = 'using';
+    system = 'System';
+    namespace = 'namespace';
+    classname = 'class';
     semicolon = ';';
-    static_symbol = 'static';
-    void_symbol = '';
-    main_symbol = 'Main';
-    string_symbol = 'string';
-    console_symbol = 'Console';
-    writeLine_symbol = 'WriteLine';
-    one_line_comment_begin = '//';
-    multi_line_comment_begin = '/*';
-    multi_line_comment_end = '*/';
-    int_symbol = 'int';
-    double_symbol = 'double';
-    bool_symbol = 'bool';
+    static = 'static';
+    void = 'void';
+    main = 'Main';
+    console = 'Console';
+    writeline = 'WriteLine';
+    dot = '.';
+
+    // comments
+    one_line_comment = '//' (not_slash_input_char input_chars?)?;
+    block_comment = '/*' all_but_star* '*'+ (all_but_star_and_slash all_but_star* '*'+)* '/';
+
+    // literals
+    int = 'int';
+    double = 'double';
+    string = 'string';
+    bool = 'bool';
+    true = 'true';
+    false = 'false';
+    double_value = ('-'|'+')? number? '.' digit+;
+    int_value = ('-'|'+')? number;
+
+    //unary operations
+    log_not = '!';
+
+    // operations
+    mul = '*';
+    div = '/';
+    mod = '%';
+    plus = '+';
+    minus = '-';
+
+    // relop
+    lt = '<';
+    lteq = '<=';
+    gt = '>';
+    gteq = '>=';
+    eq = '==';
+    neq = '!=';
+
+    // bools
+    log_and = '&&';
+    log_or = '||';
+
+    if = 'if';
+    else ='else';
+    return = 'return';
     l_brace = '{';
     r_brace = '}';
     l_par = '(';
     r_par = ')';
     l_bracket = '[';
     r_bracket = ']';
-    double_value = ('-')? number? '.' digit+;
-    int_value = ('-')? number;
 
-    identifier =
+    whitespace = (cr | lf | tab | ' ')+;
 
-    dot_symbol = '.';
+    identifier = not_a_digit (digit | not_a_digit)*;
+    number = number;
+
+Ignored Tokens
+    whitespace,
+    one_line_comment,
+    block_comment;
+
+// Productions
+    // program = using system semicolon namespace  class identifier
+
