@@ -5,21 +5,23 @@ Helpers
     not_a_digit = ['_' + [['a' .. 'z'] + ['A' .. 'Z']]];
     number = digit+;
 
-    lf = 10;
     cr = 13;
+    lf = 10;
     next_line = 0x85;
     line_separator = 0x2028;
     paragraph_separator = 0x2029;
-    newline = ( lf | cr | cr lf | next_line | line_separator | paragraph_separator );
-    newline_chars = [[[[cr + lf] + next_line] + line_separator] + paragraph_separator];
+    newline = cr | lf | cr lf | next_line | line_separator | paragraph_separator;
+    newline_chars = [[[[ cr + lf ] + next_line ] + line_separator ] + paragraph_separator ];
     input_char = [ all_chars - newline_chars ];
     input_chars = input_char+;
     not_slash_input_char = [ input_char - '/'];
 
     tab = 9;
-    all_but_newline = [all_chars - newline];
     all_but_star = [all_chars - '*'];
     all_but_star_and_slash = [all_but_star - '/'];
+
+    string_literal_char = [all_chars - '"'];
+    string_literal = '"' string_literal_char* '"';
 
 
 Tokens
@@ -35,6 +37,7 @@ Tokens
     console = 'Console';
     writeline = 'WriteLine';
     dot = '.';
+    comma = ',';
 
     // comments
     one_line_comment = '//' (not_slash_input_char input_chars?)?;
@@ -49,6 +52,7 @@ Tokens
     false = 'false';
     double_value = ('-'|'+')? number? '.' digit+;
     int_value = ('-'|'+')? number;
+    string_literal = string_literal;
 
     //unary operations
     log_not = '!';
@@ -81,6 +85,8 @@ Tokens
     r_par = ')';
     l_bracket = '[';
     r_bracket = ']';
+    equals = '=';
+
 
     whitespace = (cr | lf | tab | ' ')+;
 
