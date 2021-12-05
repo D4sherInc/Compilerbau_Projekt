@@ -45,13 +45,13 @@ Tokens
     block_comment = '/*' all_but_star* '*'+ (all_but_star_and_slash all_but_star* '*'+)* '/';
 
     // literals
-    int = 'int';
-    double = 'double';
-    string = 'string';
-    bool = 'bool';
+    int_symbol = 'int';
+    double_symbol = 'double';
+    string_symbol = 'string';
+    bool_symbol = 'bool';
     true = 'true';
     false = 'false';
-    double_value = number? '.' digit+;
+    double_value = number? '.' number;
     int_value = number;
     string_literal = string_literal;
 
@@ -113,3 +113,27 @@ Productions
                  r_brace;
 
 
+    // every declaration of functions, variables etc.
+    // one main function MUST exist
+    decl_or_def =   [before_main]:non_main*
+                    main_function
+                    [after_main]:non_main*;
+
+    // main method, needs exist
+    main_function = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par void_function_code;
+    
+    {non_main} non_main = function_decl | var_decl;
+    function_decl = static_symbol function;
+
+    function =
+    {void_func}     void_func_decl      |
+    {int_func}      int_func_decl       |
+    {double_func}   double_func_decl    |
+    {bool_func}     bool_func_decl      |
+    {string_func}   string_func_decl;
+
+    var_decl =
+    {integer_decl}   int_symbol identifier equals int_value semicolon           |
+    {double_decl}    double_symbol identifier equals double_value semicolon     |
+    {bool_decl}      bool_symbol identifier equals bool_value                   |
+    {string_decl}    string_symbol identifier equals string_literal semicolon;
