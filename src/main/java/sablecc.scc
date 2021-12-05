@@ -2,7 +2,8 @@ Helpers
     all_chars = [ 0 .. 65535 ];
     first_digit = ['1' .. '9'];
     digit = ['0' + first_digit];
-    not_a_digit = ['_' + [['a' .. 'z'] + ['A' .. 'Z']]];
+    underscore = '_';
+    not_a_digit = [underscore + [['a' .. 'z'] + ['A' .. 'Z']]];
     number = digit+;
 
     cr = 13;
@@ -23,17 +24,17 @@ Helpers
     string_literal_char = [all_chars - '"'];
     string_literal = '"' string_literal_char* '"';
 
-
 Tokens
     // static names
-    using = 'using';
-    system = 'System';
-    namespace = 'namespace';
-    classname = 'class';
+    public = 'public';
+    using_symbol = 'using_symbol';
+    system_symbol = 'System';
+    namespace_symbol = 'namespace';
+    class_symbol = 'class';
     semicolon = ';';
-    static = 'static';
-    void = 'void';
-    main = 'Main';
+    static_symbol = 'static';
+    void_symbol = 'void';
+    main_symbol = 'Main';
     console = 'Console';
     writeline = 'WriteLine';
     dot = '.';
@@ -50,8 +51,8 @@ Tokens
     bool = 'bool';
     true = 'true';
     false = 'false';
-    double_value = ('-'|'+')? number? '.' digit+;
-    int_value = ('-'|'+')? number;
+    double_value = number? '.' digit+;
+    int_value = number;
     string_literal = string_literal;
 
     //unary operations
@@ -98,6 +99,17 @@ Ignored Tokens
     one_line_comment,
     block_comment;
 
-// Productions
-    // program = using system semicolon namespace  class identifier
+
+Productions
+    // program structure, that is ALWAYS the same
+    start = using_symbol system_symbol semicolon
+            namespace_symbol [namespace_identifier]:identifier
+            l_brace class_symbol [class_identifier]:identifier
+                code_block
+            r_brace;
+    
+    code_block = l_brace
+                    decl_or_def*
+                 r_brace;
+
 
