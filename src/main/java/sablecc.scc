@@ -79,7 +79,7 @@ Tokens
 
     if = 'if';
     else ='else';
-    return = 'return';
+    return_symbol = 'return';
     l_brace = '{';
     r_brace = '}';
     l_par = '(';
@@ -99,7 +99,6 @@ Ignored Tokens
     one_line_comment,
     block_comment;
 
-
 Productions
     // program structure, that is ALWAYS the same
     start = using_symbol system_symbol semicolon
@@ -112,7 +111,6 @@ Productions
                     decl_or_def*
                  r_brace;
 
-
     // every declaration of functions, variables etc.
     // one main function MUST exist
     decl_or_def =   [before_main]:non_main*
@@ -120,9 +118,12 @@ Productions
                     [after_main]:non_main*;
 
     // main method, needs exist
-    main_function = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par void_function_code;
+    main_function = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par l_brace void_method r_brace;
     
-    {non_main} non_main = function_decl | var_decl;
+    non_main =
+    {function} function_decl |
+    {var_decl} var_decl;
+
     function_decl = static_symbol function;
 
     function =
@@ -132,8 +133,43 @@ Productions
     {bool_func}     bool_func_decl      |
     {string_func}   string_func_decl;
 
+    void_func_decl = void_symbol identifier l_par parameter_list r_par l_brace void_method r_brace;
+    int_func_decl = int_symbol identifier l_par parameter_list r_par l_brace int_method r_brace;
+    double_func_decl = double_symbol identifier l_par parameter_list r_par l_brace double_method r_brace;
+    bool_func_decl = bool_symbol identifier l_par parameter_list r_par l_brace bool_method r_brace;
+    string_func_decl = string_symbol identifier l_par parameter_list r_par l_brace string_method r_brace;
+
+    void_method = void_content*;
+    void_content =
+    {var_decl} var_decl |
+    {statement} statement* |
+    {return} return_symbol semicolon;
+
+    //TODO
+    int_method = int_symbol;
+    double_method = double_symbol;
+    bool_method = bool_symbol;
+    string_method = string_symbol;
+
+    parameter_list = parameter parameter_list_tail?;
+    parameter_list_tail = comma parameter parameter_list_tail?;
+    parameter =
+    {int}   int_symbol identifier       |
+    {double} double_symbol identifier   |
+    {bool} bool_symbol identifier       |
+    {string} string_symbol identifier;
+
+
+    //TODO
+    statement = string_literal;
+
     var_decl =
     {integer_decl}   int_symbol identifier equals int_value semicolon           |
     {double_decl}    double_symbol identifier equals double_value semicolon     |
     {bool_decl}      bool_symbol identifier equals bool_value                   |
     {string_decl}    string_symbol identifier equals string_literal semicolon;
+
+    //TODO: {calc}
+    bool_value =
+    {true} true |
+    {false} false;
