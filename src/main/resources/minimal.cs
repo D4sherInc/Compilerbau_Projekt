@@ -1,19 +1,27 @@
 using System;
 
-public class Program
+namespace HelloWorld
 {
-	public void Main()
-	{
-		// this is a one line comment
-		Console.WriteLine(calc(3));
-		/*
-		this is a block comment
-		*/
-	}
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // this is a one line comment
+            Console.WriteLine(calc(3));
 
-	public static double calc (int integer)
-	{
-		int i = (3+5);
-		return (integer + i);
-	}
+            /*
+            this is a block comment
+            */
+        }
+
+        static string calc(double number)
+        {
+            int counter = 0;
+            while (counter < 5) {
+                Console.WriteLine(counter);
+                counter = counter + 1;
+            }
+            return("7");
+        }
+    }
 }

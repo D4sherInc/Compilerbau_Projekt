@@ -18,6 +18,7 @@ Helpers
     not_slash_input_char = [ input_char - '/'];
 
     tab = 9;
+
     all_but_star = [all_chars - '*'];
     all_but_star_and_slash = [all_but_star - '/'];
 
@@ -27,7 +28,7 @@ Helpers
 Tokens
     // static names
     public = 'public';
-    using_symbol = 'using_symbol';
+    using_symbol = 'using';
     system_symbol = 'System';
     namespace_symbol = 'namespace';
     class_symbol = 'class';
@@ -79,6 +80,7 @@ Tokens
 
     if = 'if';
     else ='else';
+    while = 'while';
     return_symbol = 'return';
     l_brace = '{';
     r_brace = '}';
@@ -88,7 +90,7 @@ Tokens
     r_bracket = ']';
     equals = '=';
 
-
+    newline = newline;
     whitespace = (cr | lf | tab | ' ')+;
 
     identifier = not_a_digit (digit | not_a_digit)*;
@@ -96,6 +98,7 @@ Tokens
 
 Ignored Tokens
     whitespace,
+    newline,
     one_line_comment,
     block_comment;
 
@@ -106,23 +109,25 @@ Productions
             [first_code_block_opening]:l_brace
                 class_symbol [class_identifier]:identifier
                 [class_code_block_opening]:l_brace
-                    class_content*
+                    [non_main_stuff1]:class_content*
+                    main_method
+                    [non_main_stuff2]:class_content*
                 [class_code_block_closing]:r_brace
             [first_code_block_closing]:r_brace;
 
 
     class_content =
-    {block}             code_block              |
-    {declaration}       decl_statement   |                                       // int number  = 3.459
+    {declaration}       decl_statement          |                                       // int number  = 3.459
     {method}            method_declaration;                                             // static int fib =
 
     //TODO
     //main method, needs to exist
-    //main_method = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par l_brace void_method_body r_brace;
+    main_method = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par method_body;
+
 
     method_declaration =
-            static_symbol type identifier l_par parameter_list? r_par method_body |
-    {void}  static_symbol void_symbol identifier l_par parameter_list? r_par method_body;
+                    static_symbol type identifier l_par parameter_list? r_par method_body |
+    {void}          static_symbol void_symbol identifier l_par parameter_list? r_par method_body;
 
     method_body = l_brace statement* r_brace;
 
@@ -163,7 +168,7 @@ Productions
             simple_expression           |                                       // base case
     {plus}  plus simple_expression      |                                       // +5
     {minus} minus simple_expression     |                                       // -5
-    {not}   log_not simple_expression;                                              // !5
+    {not}   log_not simple_expression;                                          // !5
 
     mul_expression =
                 unary_expression                     |                          // base case
@@ -200,7 +205,8 @@ Productions
     {or}    conditional_expression log_or conditional_and_expression;           // E1 || E2
 
     statement =
-    {declaration}           decl_statement |                             // var = value
+    {declaration}           decl_statement                                  |   // var = value
+    {write_line}            write_line l_par expression r_par semicolon     |
     {embedded_statement}    embedded_statement;                                 // codeblocks like if-else, loops,...
 
     decl_statement = local_var_declaration semicolon;
@@ -216,19 +222,41 @@ Productions
     {initialize}    identifier equals expression;                               // int name = [expr];
 
     expression =
-    //TODO
-    {assignment}    assignment                  |
-    {cond}   conditional_expression;
+    {assignment}    assignment                  |                               // i = 0;
+    {cond}          conditional_expression;
 
-    //TODO
     embedded_statement =
-    {block} code_block;         /* |
-    {if}    if_statement        |
-    {if_else} if_else_statement |
+    {rest}      rest                |
+    {if}        if_statement        |
+    {if_else}   if_else_statement   |
     {while} while_statement;
-*/
+
+    embedded_statement_no_short_if =
+    {rest}      rest                            |
+    {if_else}   if_else_statement_no_short_if   |
+    {while}     while_statement_no_short_if;
+
+    rest =
+    {code_block}        code_block                          |
+    {single_statement}  expression semicolon                |
+    {return}            return_symbol expression? semicolon;
+
+    if_statement =
+        if l_par expression r_par embedded_statement;
+
+    if_else_statement =
+        if l_par expression r_par [true]: embedded_statement_no_short_if else [false]: embedded_statement;
+
+    if_else_statement_no_short_if =
+        if l_par expression r_par [true]: embedded_statement_no_short_if else [false]: embedded_statement_no_short_if;
+
+    while_statement =
+        while l_par expression r_par embedded_statement;
+
+    while_statement_no_short_if =
+        while l_par expression r_par embedded_statement_no_short_if;
+
     code_block = l_brace statement* r_brace;
 
-    //TODO
-    assignment = dot;
+    assignment = identifier equals expression semicolon;
 
