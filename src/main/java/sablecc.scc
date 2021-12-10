@@ -35,13 +35,13 @@ Tokens
     static_symbol = 'static';
     void_symbol = 'void';
     main_symbol = 'Main';
-    console = 'Console';
-    writeline = 'WriteLine';
+    write_line = 'Console.WriteLine';
     dot = '.';
     comma = ',';
 
     // comments
     one_line_comment = '//' (not_slash_input_char input_chars?)?;
+    // TODO
     block_comment = '/*' all_but_star* '*'+ (all_but_star_and_slash all_but_star* '*'+)* '/';
 
     // literals
@@ -103,73 +103,132 @@ Productions
     // program structure, that is ALWAYS the same
     start = using_symbol system_symbol semicolon
             namespace_symbol [namespace_identifier]:identifier
-            l_brace class_symbol [class_identifier]:identifier
-                code_block
-            r_brace;
-    
-    code_block = l_brace
-                    decl_or_def*
-                 r_brace;
+            [first_code_block_opening]:l_brace
+                class_symbol [class_identifier]:identifier
+                [class_code_block_opening]:l_brace
+                    class_content*
+                [class_code_block_closing]:r_brace
+            [first_code_block_closing]:r_brace;
 
-    // every declaration of functions, variables etc.
-    // one main function MUST exist
-    decl_or_def =   [before_main]:non_main*
-                    main_function
-                    [after_main]:non_main*;
 
-    // main method, needs exist
-    main_function = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par l_brace void_method r_brace;
-    
-    non_main =
-    {function} function_decl |
-    {var_decl} var_decl;
-
-    function_decl = static_symbol function;
-
-    function =
-    {void_func}     void_func_decl      |
-    {int_func}      int_func_decl       |
-    {double_func}   double_func_decl    |
-    {bool_func}     bool_func_decl      |
-    {string_func}   string_func_decl;
-
-    void_func_decl = void_symbol identifier l_par parameter_list r_par l_brace void_method r_brace;
-    int_func_decl = int_symbol identifier l_par parameter_list r_par l_brace int_method r_brace;
-    double_func_decl = double_symbol identifier l_par parameter_list r_par l_brace double_method r_brace;
-    bool_func_decl = bool_symbol identifier l_par parameter_list r_par l_brace bool_method r_brace;
-    string_func_decl = string_symbol identifier l_par parameter_list r_par l_brace string_method r_brace;
-
-    void_method = void_content*;
-    void_content =
-    {var_decl} var_decl |
-    {statement} statement* |
-    {return} return_symbol semicolon;
+    class_content =
+    {block}             code_block              |
+    {declaration}       decl_statement   |                                       // int number  = 3.459
+    {method}            method_declaration;                                             // static int fib =
 
     //TODO
-    int_method = int_symbol;
-    double_method = double_symbol;
-    bool_method = bool_symbol;
-    string_method = string_symbol;
+    //main method, needs to exist
+    //main_method = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par l_brace void_method_body r_brace;
+
+    method_declaration =
+            static_symbol type identifier l_par parameter_list? r_par method_body |
+    {void}  static_symbol void_symbol identifier l_par parameter_list? r_par method_body;
+
+    method_body = l_brace statement* r_brace;
+
+    // data types
+    type =
+    {int}       int_symbol      |
+    {double}    double_symbol   |
+    {bool}      bool_symbol     |
+    {string}    string_symbol;
 
     parameter_list = parameter parameter_list_tail?;
     parameter_list_tail = comma parameter parameter_list_tail?;
-    parameter =
-    {int}   int_symbol identifier       |
-    {double} double_symbol identifier   |
-    {bool} bool_symbol identifier       |
-    {string} string_symbol identifier;
 
+    parameter = type identifier;
+
+    // Literals
+    literal =
+    {true}          true                |                                       // true
+    {false}         false               |                                       // false
+    {int_value}     int_value           |                                       // 5
+    {double_value}  double_value        |                                       // 3.459
+    {string}        string_literal;                                             // "Hello World"
+
+
+    argument_list = expression argument_list_tail*;
+    argument_list_tail = comma expression;
+
+    // expressions
+    // precedence: unary > mul > add > relation > equal > and > or
+    simple_expression =
+    {literal}   literal                 |                                       // true, false, 5, 3.459, "Hello World"
+    {par}       l_par expression r_par  |                                       // (expression)
+    {invoke}    invoke_expression;                                              // method-call
+
+    invoke_expression = identifier l_par argument_list? r_par;                  // method-call, e.g.: "fib(3)"
+
+    unary_expression =
+            simple_expression           |                                       // base case
+    {plus}  plus simple_expression      |                                       // +5
+    {minus} minus simple_expression     |                                       // -5
+    {not}   log_not simple_expression;                                              // !5
+
+    mul_expression =
+                unary_expression                     |                          // base case
+    {mul}       mul_expression mul unary_expression  |                          // E1 * E2
+    {div}       mul_expression div unary_expression  |                          // E1 / E2
+    {mod}       mul_expression mod unary_expression;                            // E1 % E2
+
+
+    add_expression =
+                mul_expression                      |                           // base case
+    {plus}      add_expression plus mul_expression  |                           // E1 + E2
+    {minus}     add_expression minus mul_expression;                            // E1 - E2
+
+    rel_expression =
+                add_expression                      |                           // base case
+    {lt}        rel_expression lt add_expression    |                           // E1 < E2
+    {gt}        rel_expression gt add_expression    |                           // E1 > E2
+    {lteq}      rel_expression lteq add_expression  |                           // E1 <= E2
+    {gteq}      rel_expression gteq add_expression;                             // E1 >= E2
 
     //TODO
-    statement = string_literal;
+    // maybe check for && fucking it up like: "cond = true && f1 == f2"
+    equality_expression =
+                    rel_expression                          |                   // base case
+    {equals}        equality_expression eq rel_expression   |                   // E1 == E2
+    {not_equals}    equality_expression neq rel_expression;                     // E1 != E2
 
-    var_decl =
-    {integer_decl}   int_symbol identifier equals int_value semicolon           |
-    {double_decl}    double_symbol identifier equals double_value semicolon     |
-    {bool_decl}      bool_symbol identifier equals bool_value                   |
-    {string_decl}    string_symbol identifier equals string_literal semicolon;
+    conditional_and_expression =
+            equality_expression                                     |           // base case
+    {and}   conditional_and_expression log_and equality_expression;             // E1 && E2
 
-    //TODO: {calc}
-    bool_value =
-    {true} true |
-    {false} false;
+    conditional_expression =
+            conditional_and_expression                              |           // base case
+    {or}    conditional_expression log_or conditional_and_expression;           // E1 || E2
+
+    statement =
+    {declaration}           decl_statement |                             // var = value
+    {embedded_statement}    embedded_statement;                                 // codeblocks like if-else, loops,...
+
+    decl_statement = local_var_declaration semicolon;
+
+    local_var_declaration = type var_declarators;                               // int [i]
+
+    var_declarators = var_declarator var_declarators_tail*;                     // int [i] (, [j], [k], ...)
+
+    var_declarators_tail = comma var_declarator;                               // int [i],[j],[k]...
+
+    var_declarator =
+    {declaration}   identifier                  |                               // int name;
+    {initialize}    identifier equals expression;                               // int name = [expr];
+
+    expression =
+    //TODO
+    {assignment}    assignment                  |
+    {cond}   conditional_expression;
+
+    //TODO
+    embedded_statement =
+    {block} code_block;         /* |
+    {if}    if_statement        |
+    {if_else} if_else_statement |
+    {while} while_statement;
+*/
+    code_block = l_brace statement* r_brace;
+
+    //TODO
+    assignment = dot;
+
