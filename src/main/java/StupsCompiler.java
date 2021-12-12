@@ -15,7 +15,9 @@ import java.util.stream.Collectors;
 
 public class StupsCompiler {
     public static void main(String[] args) throws IOException, LexerException {
-        Path path = Paths.get("../resources/minimal.cs");
+        // java StupsCompiler
+        // java StupsCompiler ../resources/minimal.cs
+        Path path = Paths.get(args[0]);
         List<String> input = Files.lines(path).collect(Collectors.toList());
         int lineCounter = 1;
         for (String line : input) {
