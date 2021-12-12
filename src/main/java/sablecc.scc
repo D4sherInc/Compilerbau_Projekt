@@ -149,7 +149,6 @@ Productions
     {false}         false               |                                       // false
     {int_value}     int_value           |                                       // 5
     {double_value}  double_value        |                                       // 3.459
-    {identifier}    identifier          |                                       // counter
     {string}        string_literal;                                             // "Hello World"
 
 
@@ -159,9 +158,10 @@ Productions
     // expressions
     // precedence: unary > mul > add > relation > equal > and > or
     simple_expression =
-    {literal}   literal                 |                                       // true, false, 5, 3.459, "Hello World"
-    {par}       l_par expression r_par  |                                       // (expression)
-    {invoke}    invoke_expression;                                              // method-call
+    {identifier}    identifier              |                                   // counter
+    {literal}       literal                 |                                   // true, false, 5, 3.459, "Hello World"
+    {par}           l_par expression r_par  |                                   // (expression)
+    {invoke}        invoke_expression;                                          // method-call
 
     invoke_expression = identifier l_par argument_list? r_par;                  // method-call, e.g.: "fib(3)"
 
@@ -211,8 +211,8 @@ Productions
     {embedded_statement}    embedded_statement;                                 // codeblocks like if-else, loops,...
 
     single_statement =
-    {assignment}            assignment                                      |   // var = value
-    {write_line}            write_line l_par expression r_par semicolon;        // Console.WriteLine(E);
+    {assignment}            assignment                              |           // var = value
+    {write_line}            write_line l_par expression r_par ;                 // Console.WriteLine(E);
 
 
     decl_statement = local_var_declaration semicolon;
@@ -246,7 +246,7 @@ Productions
 
     rest =
     {code_block}        code_block                                  |
-    {single_statement}  single_statement                            |
+    {single_statement}  single_statement semicolon                  |
     {return}            return_symbol expression? semicolon;
 
     code_block = l_brace statement* r_brace;

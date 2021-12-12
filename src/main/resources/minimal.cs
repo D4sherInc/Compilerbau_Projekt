@@ -19,7 +19,7 @@ namespace HelloWorld
             int counter = 0;
             while (counter < 5) {
                 Console.WriteLine(counter);
-                // counter = counter + 1;
+                counter = counter + 1;
             }
             // short while
             while (counter < 10) Console.WriteLine("short while");
@@ -31,19 +31,19 @@ namespace HelloWorld
             // short if long else
             if (false) Console.WriteLine("short if long else yes");
             else {
-                // counter = counter + 2;
+                counter = counter + 2;
                 Console.WriteLine("short if long else no");
             }
             // long if
             if (true) {
-                // counter = counter + 4;
+                counter = counter + 4;
 				Console.WriteLine("long if yes");
             }
 
             // long if short else
             if (false)
             {
-                // counter = counter + 4;
+                counter = counter + 4;
 				Console.WriteLine("long if short else yes");
             }
             else Console.WriteLine("long if short else no");
