@@ -118,7 +118,7 @@ Productions
 
     class_content =
     {declaration}       decl_statement          |                                       // int number  = 3.459
-    {method}            method_declaration;                                             // static int fib =
+    {method}            method_declaration;                                             // static int fib(int x) {...}
 
     //TODO
     //main method, needs to exist
@@ -126,7 +126,7 @@ Productions
 
 
     method_declaration =
-                    static_symbol type identifier l_par parameter_list? r_par method_body |
+                    static_symbol type identifier l_par parameter_list? r_par method_body           |
     {void}          static_symbol void_symbol identifier l_par parameter_list? r_par method_body;
 
     method_body = l_brace statement* r_brace;
@@ -149,6 +149,7 @@ Productions
     {false}         false               |                                       // false
     {int_value}     int_value           |                                       // 5
     {double_value}  double_value        |                                       // 3.459
+    {identifier}    identifier          |                                       // counter
     {string}        string_literal;                                             // "Hello World"
 
 
@@ -205,9 +206,14 @@ Productions
     {or}    conditional_expression log_or conditional_and_expression;           // E1 || E2
 
     statement =
-    {declaration}           decl_statement                                  |   // var = value
-    {write_line}            write_line l_par expression r_par semicolon     |
+    {declaration}           decl_statement                                  |   // type var = value
+    {write_line}            write_line l_par expression r_par semicolon     |   // Console.WriteLine(E);
     {embedded_statement}    embedded_statement;                                 // codeblocks like if-else, loops,...
+
+    single_statement =
+    {assignment}            assignment                                      |   // var = value
+    {write_line}            write_line l_par expression r_par semicolon;        // Console.WriteLine(E);
+
 
     decl_statement = local_var_declaration semicolon;
 
@@ -225,11 +231,13 @@ Productions
     {assignment}    assignment                  |                               // i = 0;
     {cond}          conditional_expression;
 
+    assignment = identifier equals expression;
+
     embedded_statement =
     {rest}      rest                |
     {if}        if_statement        |
     {if_else}   if_else_statement   |
-    {while} while_statement;
+    {while}     while_statement;
 
     embedded_statement_no_short_if =
     {rest}      rest                            |
@@ -237,9 +245,11 @@ Productions
     {while}     while_statement_no_short_if;
 
     rest =
-    {code_block}        code_block                          |
-    {single_statement}  expression semicolon                |
+    {code_block}        code_block                                  |
+    {single_statement}  single_statement                            |
     {return}            return_symbol expression? semicolon;
+
+    code_block = l_brace statement* r_brace;
 
     if_statement =
         if l_par expression r_par embedded_statement;
@@ -255,8 +265,3 @@ Productions
 
     while_statement_no_short_if =
         while l_par expression r_par embedded_statement_no_short_if;
-
-    code_block = l_brace statement* r_brace;
-
-    assignment = identifier equals expression semicolon;
-

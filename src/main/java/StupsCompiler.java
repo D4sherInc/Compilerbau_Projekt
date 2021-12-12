@@ -22,10 +22,10 @@ public class StupsCompiler {
             PushbackReader r = new PushbackReader(reader);
             Lexer l = new Lexer(r);
             Token token;
-            System.out.println("LINE " + lineCounter);
+            System.out.println("\nLINE " + lineCounter);
             do {
                 token = l.next();
-                System.out.println(token.getClass().getSimpleName() + " " + token.getText());
+                if (!token.getClass().getSimpleName().equals("TWhitespace")) System.out.println(token.getClass().getSimpleName() + " " + token.getText());
             } while (!(token instanceof EOF));
             lineCounter++;
         }
