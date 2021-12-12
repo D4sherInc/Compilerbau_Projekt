@@ -10,6 +10,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,17 @@ public class StupsCompiler {
         // java StupsCompiler
         // java StupsCompiler ../resources/minimal.cs
         Path path = Paths.get(args[0]);
-        List<String> input = Files.lines(path).collect(Collectors.toList());
+        List<String> input;
+
+        // try-catch for IOException: wrong filepath
+        try{
+            input = Files.lines(path).collect(Collectors.toList());
+        }
+        catch (IOException e) {
+            System.err.println("ERROR: no such file found, try another path");
+            input = new LinkedList<>();
+        }
+
         int lineCounter = 1;
         for (String line : input) {
             StringReader reader = new StringReader(line);
@@ -34,7 +45,7 @@ public class StupsCompiler {
                     token = l.next();
                 }
                 catch (LexerException e) {
-                    System.out.println("LINE " + lineCounter + " " + e.getMessage());
+                    System.out.println("ERROR ON LINE " + lineCounter + " " + e.getMessage());
                     token = new TWhitespace(" ");
                 }
                 if (!token.getClass().getSimpleName().equals("TWhitespace")) System.out.println(token.getClass().getSimpleName() + " " + token.getText());
