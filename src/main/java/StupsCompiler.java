@@ -18,7 +18,13 @@ public class StupsCompiler {
     public static void main(String[] args) throws IOException, LexerException {
         // java StupsCompiler
         // java StupsCompiler ../resources/minimal.cs
-        Path path = Paths.get(args[0]);
+        Path path_to_file = Paths.get(args[0]);
+        lex(path_to_file);
+
+    }
+
+    private static void lex(Path path) throws IOException {
+
         List<String> input;
 
         // try-catch for IOException: wrong filepath
@@ -31,12 +37,12 @@ public class StupsCompiler {
         }
 
         int lineCounter = 1;
+        boolean lexErrorFound = false;
         for (String line : input) {
             StringReader reader = new StringReader(line);
             PushbackReader r = new PushbackReader(reader);
             Lexer l = new Lexer(r);
             Token token;
-            System.out.println("\nLINE " + lineCounter);
             do {
 
                 // try-catch for lexical error: token not found --> print "unknown token: *token*"
@@ -47,10 +53,12 @@ public class StupsCompiler {
                 catch (LexerException e) {
                     System.out.println("ERROR ON LINE " + lineCounter + " " + e.getMessage());
                     token = new TWhitespace(" ");
+                    lexErrorFound = true;
                 }
-                if (!token.getClass().getSimpleName().equals("TWhitespace")) System.out.println(token.getClass().getSimpleName() + " " + token.getText());
             } while (!(token instanceof EOF));
             lineCounter++;
         }
+
+        if (!lexErrorFound) System.out.println("lexing successful");
     }
 }
