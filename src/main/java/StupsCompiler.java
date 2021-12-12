@@ -1,6 +1,7 @@
 import lexer.Lexer;
 import lexer.LexerException;
 import node.EOF;
+import node.TWhitespace;
 import node.Token;
 
 import java.io.IOException;
@@ -24,7 +25,16 @@ public class StupsCompiler {
             Token token;
             System.out.println("\nLINE " + lineCounter);
             do {
-                token = l.next();
+
+                // try-catch for lexical error: token not found --> print "unknown token: *token*"
+                // add Whitespace token (gets ignored), --> keep going
+                try{
+                    token = l.next();
+                }
+                catch (LexerException e) {
+                    System.out.println("LINE " + lineCounter + " " + e.getMessage());
+                    token = new TWhitespace(" ");
+                }
                 if (!token.getClass().getSimpleName().equals("TWhitespace")) System.out.println(token.getClass().getSimpleName() + " " + token.getText());
             } while (!(token instanceof EOF));
             lineCounter++;
