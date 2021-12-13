@@ -50,8 +50,7 @@ Tokens
     double_symbol = 'double';
     string_symbol = 'string';
     bool_symbol = 'bool';
-    true = 'true';
-    false = 'false';
+    bool = ('true'|'false');
     double_value = number? '.' number;
     int_value = number;
     string_literal = string_literal;
@@ -104,164 +103,386 @@ Ignored Tokens
 
 Productions
     // program structure, that is ALWAYS the same
-    start = using_symbol system_symbol semicolon
+    start {-> start_abstract}=
+            using_symbol system_symbol semicolon
             namespace_symbol [namespace_identifier]:identifier
             [first_code_block_opening]:l_brace
                 class_symbol [class_identifier]:identifier
                 [class_code_block_opening]:l_brace
-                    [non_main_stuff1]:class_content*
-                    main_method
-                    [non_main_stuff2]:class_content*
+                    [non_main_stuff1]:method_declaration*
+                    [main_method]:main_method
+                    [non_main_stuff2]:method_declaration*
                 [class_code_block_closing]:r_brace
-            [first_code_block_closing]:r_brace;
+            [first_code_block_closing]:r_brace
+
+            {-> New start_abstract.program( [non_main_stuff1.method_declaration_abstract],
+                                            main_method.main_method_abstract,
+                                            [non_main_stuff2.method_declaration_abstract])};
+
+    //DONE
+//    class_content {-> class_content_abstract*} =
+//    {declaration}   decl_statement
+//        {-> [New class_content_abstract.decl_statement(decl_statement.decl_statement_abstract)]}  |                    // int number  = 3.459
+//
+//    {method}        method_declaration
+//        {-> New class_content_abstract.method_declaration(method_declaration.method_declaration_abstract)};     // static int fib(int x) {...}
 
 
-    class_content =
-    {declaration}       decl_statement          |                                       // int number  = 3.459
-    {method}            method_declaration;                                             // static int fib(int x) {...}
+    //DONE
+    main_method {-> main_method_abstract} =
+        static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par [code_block]:code_block
+            {-> New main_method_abstract.main(code_block.statement_abstract)};
 
-    //TODO
-    //main method, needs to exist
-    main_method = static_symbol void_symbol main_symbol l_par string_symbol l_bracket r_bracket identifier r_par method_body;
+    //DONE
+    method_declaration {-> method_declaration_abstract*} =
+            static_symbol [type]:type identifier l_par [parameter_list]:parameter_list? r_par [code_block]:code_block
+                {-> [New method_declaration_abstract.type(   type.type_abstract,
+                                                            [parameter_list.parameter_list_abstract],
+                                                            code_block.statement_abstract)]}                                    |
 
+    {void}  static_symbol void_symbol identifier l_par [parameter_list]:parameter_list? r_par [code_block]:code_block
+                {-> [New method_declaration_abstract.void(   [parameter_list.parameter_list_abstract],
+                                                            code_block.statement_abstract)]};
 
-    method_declaration =
-                    static_symbol type identifier l_par parameter_list? r_par method_body           |
-    {void}          static_symbol void_symbol identifier l_par parameter_list? r_par method_body;
+    //DONE
+    code_block {-> statement_abstract}
+     = l_brace statement* r_brace
+        {-> New statement_abstract.code_block([statement.statement_abstract])};
 
-    method_body = l_brace statement* r_brace;
-
+    //DONE
     // data types
-    type =
-    {int}       int_symbol      |
-    {double}    double_symbol   |
-    {bool}      bool_symbol     |
-    {string}    string_symbol;
+    type {-> type_abstract} =
+    {int}       int_symbol
+        {-> New type_abstract.int(int_symbol)}          |
 
-    parameter_list = parameter parameter_list_tail?;
-    parameter_list_tail = comma parameter parameter_list_tail?;
+    {double}    double_symbol
+        {-> New type_abstract.double(double_symbol)}    |
 
-    parameter = type identifier;
+    {bool}      bool_symbol
+        {-> New type_abstract.bool(bool_symbol)}        |
 
+    {string}    string_symbol
+        {-> New type_abstract.string(string_symbol)};
+
+
+    parameter_list {-> parameter_list_abstract*} =
+        [first]:parameter [follow]:parameter_list_tail*
+            {-> [New parameter_list_abstract.list(first.parameter_abstract, [follow.parameter_abstract])]};
+
+
+    parameter_list_tail {-> parameter_abstract*} =
+        comma parameter
+            {-> [parameter.parameter_abstract]};
+
+
+    parameter {-> parameter_abstract} =
+        [type]:type identifier
+            {-> New parameter_abstract.param(type.type_abstract, identifier)};
+
+
+    //DONE
     // Literals
-    literal =
-    {true}          true                |                                       // true
-    {false}         false               |                                       // false
-    {int_value}     int_value           |                                       // 5
-    {double_value}  double_value        |                                       // 3.459
-    {string}        string_literal;                                             // "Hello World"
+    literal {-> literal_abstract} =
+    {bool_value}    bool
+        {-> New literal_abstract.bool(bool)}            |
+
+    {int_value}     int_value
+        {-> New literal_abstract.int(int_value)}        |                                               // 5
+
+    {double_value}  double_value
+        {-> New literal_abstract.double(double_value)} |                                                // 3.459
+
+    {string}        string_literal
+        {-> New literal_abstract.string(string_literal)};                                               // "Hello World"
 
 
-    argument_list = expression argument_list_tail*;
-    argument_list_tail = comma expression;
+    argument_list {-> argument_list_abstract*} =
+        [first]:expression [follow]:argument_list_tail*
+            {-> [New argument_list_abstract.list(first.expression_abstract, [follow.expression_abstract])]};
+
+    argument_list_tail {-> expression_abstract*} =
+        comma expression
+            {-> [expression.expression_abstract]};
 
     // expressions
     // precedence: unary > mul > add > relation > equal > and > or
-    simple_expression =
-    {identifier}    identifier              |                                   // counter
-    {literal}       literal                 |                                   // true, false, 5, 3.459, "Hello World"
-    {par}           l_par expression r_par  |                                   // (expression)
-    {invoke}        invoke_expression;                                          // method-call
-
-    invoke_expression = identifier l_par argument_list? r_par;                  // method-call, e.g.: "fib(3)"
-
-    unary_expression =
-            simple_expression           |                                       // base case
-    {plus}  plus simple_expression      |                                       // +5
-    {minus} minus simple_expression     |                                       // -5
-    {not}   log_not simple_expression;                                          // !5
-
-    mul_expression =
-                unary_expression                     |                          // base case
-    {mul}       mul_expression mul unary_expression  |                          // E1 * E2
-    {div}       mul_expression div unary_expression  |                          // E1 / E2
-    {mod}       mul_expression mod unary_expression;                            // E1 % E2
 
 
-    add_expression =
-                mul_expression                      |                           // base case
-    {plus}      add_expression plus mul_expression  |                           // E1 + E2
-    {minus}     add_expression minus mul_expression;                            // E1 - E2
+    invoke_expression {-> expression_abstract} =
+        identifier l_par [arguments]:argument_list? r_par                                              // method-call, e.g.: "fib(3)"
+        {-> New expression_abstract.invoke(identifier, [arguments.argument_list_abstract])};
 
-    rel_expression =
-                add_expression                      |                           // base case
-    {lt}        rel_expression lt add_expression    |                           // E1 < E2
-    {gt}        rel_expression gt add_expression    |                           // E1 > E2
-    {lteq}      rel_expression lteq add_expression  |                           // E1 <= E2
-    {gteq}      rel_expression gteq add_expression;                             // E1 >= E2
+
+    simple_expression {-> expression_abstract} =
+    {identifier}    identifier                                                                                      // counter
+                        {-> New expression_abstract.identifier(identifier)}                     |
+
+    {literal}       literal                                                                                         // true, false, 5, 3.459, "Hello World"
+                        {-> New expression_abstract.literal(literal.literal_abstract)}          |
+
+    {par}           l_par expression r_par                                                                          // (expression)
+                        {-> expression.expression_abstract}                                     |
+
+    {invoke}        invoke_expression                                                                               // method-call
+                        {-> invoke_expression.expression_abstract};
+
+
+    unary_expression {-> expression_abstract} =
+            simple_expression                                                                                       // base case
+                {-> simple_expression.expression_abstract}                                      |
+
+    {plus}  plus simple_expression                                                                                  // +5
+                {-> New expression_abstract.unary_plus(simple_expression.expression_abstract)}  |
+
+    {minus} minus simple_expression                                                                                 // -5
+                {-> New expression_abstract.unary_minus(simple_expression.expression_abstract)} |
+
+    {not}   log_not simple_expression                                                                               // !5
+                {-> New expression_abstract.not(simple_expression.expression_abstract)};
+
+
+    mul_expression {-> expression_abstract} =
+                unary_expression                                                                                    // base case
+                    {-> unary_expression.expression_abstract}                                               |
+
+    {mul}       [left]:mul_expression mul [right]:unary_expression                                                  // E1 * E2
+                    {-> New expression_abstract.mul(left.expression_abstract, right.expression_abstract)}   |
+
+    {div}       [left]:mul_expression div [right]:unary_expression                                                  // E1 / E2
+                    {-> New expression_abstract.div(left.expression_abstract, right.expression_abstract)}   |
+
+    {mod}       [left]:mul_expression mod [right]:unary_expression                                                  // E1 % E2
+                    {-> New expression_abstract.mod(left.expression_abstract, right.expression_abstract)};
+
+
+    add_expression {-> expression_abstract} =
+                mul_expression                                                                                      // base case
+                    {-> mul_expression.expression_abstract}                                                     |
+
+    {plus}      [left]:add_expression plus [right]:mul_expression                                                   // E1 + E2
+                    {-> New expression_abstract.plus(left.expression_abstract, right.expression_abstract)}      |
+
+    {minus}     [left]:add_expression minus [right]:mul_expression                                                  // E1 - E2
+                    {-> New expression_abstract.minus(left.expression_abstract, right.expression_abstract)};
+
+
+    rel_expression {-> expression_abstract} =
+                add_expression                                                                                      // base case
+                    {-> add_expression.expression_abstract}                                                     |
+
+    {lt}        [left]:rel_expression lt [right]:add_expression                                                     // E1 < E2
+                    {-> New expression_abstract.lt(left.expression_abstract, right.expression_abstract)}        |
+
+    {gt}        [left]:rel_expression gt [right]:add_expression                                                     // E1 > E2
+                    {-> New expression_abstract.gt(left.expression_abstract, right.expression_abstract)}        |
+
+    {lteq}      [left]:rel_expression lteq [right]:add_expression                                                   // E1 <= E2
+                    {-> New expression_abstract.lteq(left.expression_abstract, right.expression_abstract)}      |
+
+    {gteq}      [left]:rel_expression gteq [right]:add_expression                                                   // E1 >= E2
+                    {-> New expression_abstract.gteq(left.expression_abstract, right.expression_abstract)};
+
 
     //TODO
     // maybe check for && fucking it up like: "cond = true && f1 == f2"
-    equality_expression =
-                    rel_expression                          |                   // base case
-    {equals}        equality_expression eq rel_expression   |                   // E1 == E2
-    {not_equals}    equality_expression neq rel_expression;                     // E1 != E2
+    equality_expression {-> expression_abstract} =
+                    rel_expression                                                                                  // base case
+                        {-> rel_expression.expression_abstract}                                                 |
 
-    conditional_and_expression =
-            equality_expression                                     |           // base case
-    {and}   conditional_and_expression log_and equality_expression;             // E1 && E2
+    {equals}        [left]:equality_expression eq [right]:rel_expression                                            // E1 == E2
+                        {-> New expression_abstract.equals(left.expression_abstract, right.expression_abstract)}|
 
-    conditional_expression =
-            conditional_and_expression                              |           // base case
-    {or}    conditional_expression log_or conditional_and_expression;           // E1 || E2
-
-    statement =
-    {declaration}           decl_statement                                  |   // type var = value
-    {write_line}            write_line l_par expression r_par semicolon     |   // Console.WriteLine(E);
-    {embedded_statement}    embedded_statement;                                 // codeblocks like if-else, loops,...
-
-    single_statement =
-    {assignment}            assignment                              |           // var = value
-    {write_line}            write_line l_par expression r_par ;                 // Console.WriteLine(E);
+    {not_equals}    [left]:equality_expression neq [right]:rel_expression                                           // E1 != E2
+                        {-> New expression_abstract.not_equals(left.expression_abstract, right.expression_abstract)};
 
 
-    decl_statement = local_var_declaration semicolon;
+    conditional_and_expression {-> expression_abstract} =
+            equality_expression                                                                                     // base case
+                {-> equality_expression.expression_abstract}                                                    |
 
-    local_var_declaration = type var_declarators;                               // int [i]
+    {and}   [left]:conditional_and_expression log_and [right]:equality_expression                                   // E1 && E2
+                {-> New expression_abstract.and(left.expression_abstract, right.expression_abstract)};
 
-    var_declarators = var_declarator var_declarators_tail*;                     // int [i] (, [j], [k], ...)
+    expression {-> expression_abstract} =
+            conditional_and_expression                                                                              // base case
+                {-> conditional_and_expression.expression_abstract}                                                 |
 
-    var_declarators_tail = comma var_declarator;                               // int [i],[j],[k]...
+    {or}    [left]:expression log_or [right]:conditional_and_expression                                 // E1 || E2
+                {-> New expression_abstract.or(left.expression_abstract, right.expression_abstract)};
 
-    var_declarator =
-    {declaration}   identifier                  |                               // int name;
-    {initialize}    identifier equals expression;                               // int name = [expr];
+    statement {-> statement_abstract} =
+    {declaration}           decl_statement                                      // type var = value
+        {-> decl_statement.statement_abstract}                                  |
 
-    expression =
-    {assignment}    assignment                  |                               // i = 0;
-    {cond}          conditional_expression;
+    {write_line}            write_line l_par expression r_par semicolon         // Console.WriteLine(E);
+        {-> New statement_abstract.write_line(expression.expression_abstract)}  |
 
-    assignment = identifier equals expression;
+    {embedded_statement}    embedded_statement                                  // codeblocks like if-else, loops,...
+        {-> embedded_statement.statement_abstract};
 
-    embedded_statement =
-    {rest}      rest                |
-    {if}        if_statement        |
-    {if_else}   if_else_statement   |
-    {while}     while_statement;
 
-    embedded_statement_no_short_if =
-    {rest}      rest                            |
-    {if_else}   if_else_statement_no_short_if   |
-    {while}     while_statement_no_short_if;
+    single_statement {-> statement_abstract} =
+    {assignment}    assignment                                                                                      // var = value
+                        {-> assignment.statement_abstract}                                      |
 
-    rest =
-    {code_block}        code_block                                  |
-    {single_statement}  single_statement semicolon                  |
-    {return}            return_symbol expression? semicolon;
+    {write_line}    write_line l_par expression r_par                                                               // Console.WriteLine(E);
+                        {-> New statement_abstract.write_line(expression.expression_abstract)};
 
-    code_block = l_brace statement* r_brace;
 
-    if_statement =
-        if l_par expression r_par embedded_statement;
+    decl_statement {-> statement_abstract} =
+        local_var_declaration semicolon
+            {-> local_var_declaration.statement_abstract};
 
-    if_else_statement =
-        if l_par expression r_par [true]: embedded_statement_no_short_if else [false]: embedded_statement;
+    //TODO: remove tail; only single declarations (simplification for AST)
+//    local_var_declaration {-> statement_abstract} =
+//            type var_declarator                               // int [i]
+//
+//    var_declarators = var_declarator var_declarators_tail*;                     // int [i] (, [j], [k], ...)
+//
+//    var_declarators_tail = comma var_declarator;                               // int [i],[j],[k]...
 
-    if_else_statement_no_short_if =
-        if l_par expression r_par [true]: embedded_statement_no_short_if else [false]: embedded_statement_no_short_if;
+    local_var_declaration {-> statement_abstract} =
+    {declaration}   [type]:type identifier                                                                 // int name;
+                        {-> New statement_abstract.decl_statement(type.type_abstract, identifier)} |
 
-    while_statement =
-        while l_par expression r_par embedded_statement;
+    {initialize}    [type]:type identifier equals [expression]:expression                                              // int name = [expr];
+                        {-> New statement_abstract.init_statement(type.type_abstract, identifier, expression.expression_abstract)};
 
-    while_statement_no_short_if =
-        while l_par expression r_par embedded_statement_no_short_if;
+    //expression =
+    //{assignment}    assignment                  |                               // i = 0;
+    //{cond}          conditional_expression;
+
+    assignment {-> statement_abstract} =
+        identifier equals [value]:expression
+            {-> New statement_abstract.assignment(identifier, value.expression_abstract)};
+
+    embedded_statement {-> statement_abstract} =
+    {rest}      rest
+                    {-> rest.statement_abstract}                  |
+
+    {if}        if_statement
+                    {-> if_statement.statement_abstract}            |
+
+    {if_else}   if_else_statement
+                    {-> if_else_statement.statement_abstract}       |
+
+    {while}     while_statement
+                    {-> while_statement.statement_abstract};
+
+    embedded_statement_no_short_if {-> statement_abstract} =
+    {rest}      rest
+                    {-> rest.statement_abstract}                                |
+
+    {if_else}   if_else_statement_no_short_if
+                    {-> if_else_statement_no_short_if.statement_abstract}          |
+
+    {while}     while_statement_no_short_if
+                    {-> while_statement_no_short_if.statement_abstract};
+
+    rest {-> statement_abstract} =
+    {code_block}        code_block
+                            {-> code_block.statement_abstract}                         |
+
+    {single_statement}  single_statement semicolon
+                            {-> single_statement.statement_abstract}                   |
+
+    {return}            return_symbol [return_values]:expression? semicolon
+                            {-> New statement_abstract.return([return_values.expression_abstract])};
+
+    if_statement {-> statement_abstract} =
+        if l_par [condition]:expression r_par [true]:embedded_statement
+            {-> New statement_abstract.if(condition.expression_abstract, true.statement_abstract)};
+
+    if_else_statement {-> statement_abstract} =
+        if l_par [condition]:expression r_par [true]:embedded_statement_no_short_if else [false]:embedded_statement
+            {-> New statement_abstract.if_else(condition.expression_abstract, true.statement_abstract, false.statement_abstract)};
+
+    if_else_statement_no_short_if {-> statement_abstract} =
+        if l_par [condition]:expression r_par [true]:embedded_statement_no_short_if else [false]:embedded_statement_no_short_if
+            {-> New statement_abstract.if_else_no_short_if(condition.expression_abstract, true.statement_abstract, false.statement_abstract)};
+
+    while_statement {-> statement_abstract} =
+        while l_par [condition]:expression r_par [true]:embedded_statement
+            {-> New statement_abstract.while(condition.expression_abstract, true.statement_abstract)};
+
+    while_statement_no_short_if {-> statement_abstract} =
+        while l_par [condition]:expression r_par [true]:embedded_statement_no_short_if
+            {-> New statement_abstract.while_no_short_if(condition.expression_abstract, true.statement_abstract)};
+
+
+Abstract Syntax Tree
+    start_abstract =
+        {program}   [non_main_stuff1]:method_declaration_abstract*
+                    [main_method]:main_method_abstract
+                    [non_main_stuff2]:method_declaration_abstract*;
+
+    //done
+//    class_content_abstract =
+//    {decl_statement}        decl_statement_abstract         |
+//    {method_declaration}    method_declaration_abstract;
+
+
+
+    main_method_abstract =
+    {main}  statement_abstract;
+
+    method_declaration_abstract =
+    {type} [type]:type_abstract [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract       |
+    {void}                      [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract;
+
+    statement_abstract =
+    {assignment}            [identifier]:identifier [value]:expression_abstract                                         |
+    {return}                [return_values]:expression_abstract*                                                        |
+    {decl_statement}        [type]:type_abstract [identifier]:identifier                                                |
+    {init_statement}        [type]:type_abstract [identifier]:identifier [expression]:expression_abstract               |
+    {write_line}            expression_abstract                                                                         |
+    {if}                    [condition]:expression_abstract [true]:statement_abstract                                   |
+    {if_else}               [condition]:expression_abstract [true]:statement_abstract [false]:statement_abstract        |
+    {if_else_no_short_if}   [condition]:expression_abstract [true]:statement_abstract [false]:statement_abstract        |
+    {while}                 [condition]:expression_abstract [true]:statement_abstract                                   |
+    {while_no_short_if}     [condition]:expression_abstract [true]:statement_abstract                                   |
+    {code_block}            statement_abstract*;
+
+    //done
+    literal_abstract =
+    {bool}      bool            |
+    {int}       int_value       |
+    {double}    double_value    |
+    {string}    string_literal;
+
+    type_abstract =
+    {int}       int_symbol     |
+    {double}    double_symbol  |
+    {bool}      bool_symbol    |
+    {string}    string_symbol;
+
+    //DONE
+    expression_abstract =
+    {invoke}        identifier [arguments]:argument_list_abstract* |
+    {identifier}    identifier                                                  |
+    {literal}       literal_abstract                                            |
+    {unary_plus}    expression_abstract                                         |
+    {unary_minus}   expression_abstract                                         |
+    {not}           expression_abstract                                         |
+    {mul}           [left]:expression_abstract [right]:expression_abstract      |
+    {div}           [left]:expression_abstract [right]:expression_abstract      |
+    {mod}           [left]:expression_abstract [right]:expression_abstract      |
+    {plus}          [left]:expression_abstract [right]:expression_abstract      |
+    {minus}         [left]:expression_abstract [right]:expression_abstract      |
+    {lt}            [left]:expression_abstract [right]:expression_abstract      |
+    {gt}            [left]:expression_abstract [right]:expression_abstract      |
+    {lteq}          [left]:expression_abstract [right]:expression_abstract      |
+    {gteq}          [left]:expression_abstract [right]:expression_abstract      |
+    {equals}        [left]:expression_abstract [right]:expression_abstract      |
+    {not_equals}    [left]:expression_abstract [right]:expression_abstract      |
+    {and}           [left]:expression_abstract [right]:expression_abstract      |
+    {or}            [left]:expression_abstract [right]:expression_abstract;
+
+    argument_list_abstract =
+    {list}  [first]:expression_abstract [follow]:expression_abstract*;
+
+    parameter_list_abstract =
+    {list}  [first]:parameter_abstract [follow]:parameter_abstract*;
+
+    parameter_abstract =
+    {param} [type]:type_abstract identifier;
