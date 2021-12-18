@@ -6,12 +6,18 @@ namespace HelloWorld
     {
         static void Main(string[] args)
         {
+            int x  = 3;
+            int y = 45;
+            int z = x + y;
+            bool whatif = false;
+
             // this is a one line comment
             Console.WriteLine(calc(3));
 
             /*
             this is a block comment
             */
+            Console.WriteLine(3);
         }
 
         static string calc(double number)
@@ -48,7 +54,7 @@ namespace HelloWorld
             }
             else Console.WriteLine("long if short else no");
 
-			return("done"); &
+			return("done");
 		}
     }
 }

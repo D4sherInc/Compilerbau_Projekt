@@ -136,12 +136,14 @@ Productions
     //DONE
     method_declaration {-> method_declaration_abstract*} =
             static_symbol [type]:type identifier l_par [parameter_list]:parameter_list? r_par [code_block]:code_block
-                {-> [New method_declaration_abstract.type(   type.type_abstract,
+                {-> [New method_declaration_abstract.type(  type.type_abstract,
+                                                            identifier,
                                                             [parameter_list.parameter_list_abstract],
                                                             code_block.statement_abstract)]}                                    |
 
     {void}  static_symbol void_symbol identifier l_par [parameter_list]:parameter_list? r_par [code_block]:code_block
-                {-> [New method_declaration_abstract.void(   [parameter_list.parameter_list_abstract],
+                {-> [New method_declaration_abstract.void(  identifier,
+                                                            [parameter_list.parameter_list_abstract],
                                                             code_block.statement_abstract)]};
 
     //DONE
@@ -416,19 +418,12 @@ Abstract Syntax Tree
                     [main_method]:main_method_abstract
                     [non_main_stuff2]:method_declaration_abstract*;
 
-    //done
-//    class_content_abstract =
-//    {decl_statement}        decl_statement_abstract         |
-//    {method_declaration}    method_declaration_abstract;
-
-
-
     main_method_abstract =
     {main}  statement_abstract;
 
     method_declaration_abstract =
-    {type} [type]:type_abstract [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract       |
-    {void}                      [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract;
+    {type} [type]:type_abstract [identifier]:identifier [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract       |
+    {void}                      [identifier]:identifier [parameter_list]:parameter_list_abstract* [code_block]:statement_abstract;
 
     statement_abstract =
     {assignment}            [identifier]:identifier [value]:expression_abstract                                         |
@@ -443,7 +438,6 @@ Abstract Syntax Tree
     {while_no_short_if}     [condition]:expression_abstract [true]:statement_abstract                                   |
     {code_block}            statement_abstract*;
 
-    //done
     literal_abstract =
     {bool}      bool            |
     {int}       int_value       |
@@ -456,9 +450,8 @@ Abstract Syntax Tree
     {bool}      bool_symbol    |
     {string}    string_symbol;
 
-    //DONE
     expression_abstract =
-    {invoke}        identifier [arguments]:argument_list_abstract* |
+    {invoke}        identifier [arguments]:argument_list_abstract*              |
     {identifier}    identifier                                                  |
     {literal}       literal_abstract                                            |
     {unary_plus}    expression_abstract                                         |

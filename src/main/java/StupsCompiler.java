@@ -66,23 +66,35 @@ public class StupsCompiler {
         return !lexErrorFound;
     }
 
-    private static void parse(String input) throws IOException, ParserException, LexerException {
+    private static void parse(String input) throws IOException, ParserException, LexerException, TypeCheckerException {
             StringReader reader = new StringReader(input);
             PushbackReader r = new PushbackReader(reader, 100);
             Lexer l = new Lexer(r);
             Parser parser = new Parser(l);
 
             boolean parseErrorFound = false;
+            boolean typeCheckErrorFound = false;
 
-            try{
-                Start start = parser.parse();
-            }
-            catch (ParserException e) {
+            try {
+                Start tree = parser.parse();
+
+                SymbolTable symbolTable = new SymbolTable();
+                TypeChecker typeChecker = new TypeChecker(symbolTable);
+                tree.apply(typeChecker);
+
+            } catch (ParserException e) {
                 System.err.println("LINE " + e.getToken().getLine() + ": found '" + e.getToken().getText() + "', expected: " + e.getMessage().substring(e.getMessage().indexOf('\'')));
                 System.err.println(e.getMessage());
                 parseErrorFound = true;
+                System.exit(1);
+            } catch (TypeCheckerException e) {
+                System.err.println(e.getMessage());
+                typeCheckErrorFound = true;
+
+
             }
         if (!parseErrorFound) System.out.println("parsing successful");
+        if (!typeCheckErrorFound) System.out.println("typecheck successful");
     }
 
 }
