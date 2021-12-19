@@ -60,8 +60,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         List<PMethodDeclarationAbstract> nonMains2 = node.getNonMainStuff2();
 
         for (PMethodDeclarationAbstract subNode : nonMains1) subNode.apply(this);
-        main.apply(this);
         for (PMethodDeclarationAbstract subNode : nonMains2) subNode.apply(this);
+
+        // main last --> invoked methods must be declared before called
+        main.apply(this);
     }
 
     @Override
@@ -117,6 +119,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         value.apply(this);
 
         symbolTable.assign_var(currentMethod, identifier.getText());
+
         resetType();
     }
 
@@ -130,7 +133,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
             if (currentType != symbolTable.get_method_return_type(currentMethod))
                 throw new TypeCheckerException("Wrong return type " + currentType + " for Method " + currentMethod);
         }
-
 
         resetType();
     }
@@ -165,6 +167,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         type.apply(this);
         identifier.apply(this);
+
         expression.apply(this);
 
         resetType();
@@ -189,7 +192,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         aTrue.apply(this);
 
-        resetType();
     }
 
     @Override
@@ -203,7 +205,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         aTrue.apply(this);
         aFalse.apply(this);
 
-        resetType();
     }
 
     @Override
@@ -217,7 +218,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         aTrue.apply(this);
         aFalse.apply(this);
 
-        resetType();
     }
 
     @Override
@@ -302,8 +302,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         LinkedList<PArgumentListAbstract> arguments = node.getArguments();
 
         called_method = identifier.getText();
+        Type returnType = symbolTable.get_method_return_type(called_method);
 
-        //TODO: check if parameters check out for invoked method 'identifier'
+        if (currentType != returnType && currentType != null)
+            throw new TypeCheckerException("Return Type mismatch: expected: " + currentType + "; actual: " + returnType);
 
         for (PArgumentListAbstract argument : arguments) argument.apply(this);
 
@@ -313,13 +315,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     public void caseAIdentifierExpressionAbstract(AIdentifierExpressionAbstract node){
         TIdentifier identifier = node.getIdentifier();
 
-        // case 1: finding identifier in params
-
-
-
-        // case 2: finding identifier inside a method
         Type id_type = symbolTable.get_var(currentMethod, identifier.getText());
 
+        // check if var is 1) as parameter given or 2) declared and initialised
+        // information saved in symbolTable for both
         if (!symbolTable.var_is_init(currentMethod, identifier.getText()))
             throw new TypeCheckerException("Variable '" + identifier.getText() +
                     "' in Method '" + currentMethod +
@@ -419,6 +418,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         if (currentType == DOUBLE) isDouble = true;
         else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
+
         right.apply(this);
         if (currentType == DOUBLE) isDouble = true;
         else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
@@ -646,6 +646,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     }
 
 
+    // arguments given for invoked method
     @Override
     public void caseAListArgumentListAbstract(AListArgumentListAbstract node) {
         PExpressionAbstract first = node.getFirst();
@@ -671,10 +672,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         if (counter < params.size()) throw new TypeCheckerException("Method '" + called_method + "' called with too few arguments.");
 
-
-
         called_method = "";
-
     }
 
     @Override
