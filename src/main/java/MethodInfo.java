@@ -31,6 +31,7 @@ public class MethodInfo {
             if (param.getKey().equals(var_name)) return false;
         }
         params.add(new AbstractMap.SimpleEntry<>(var_name, var_type));
+        var_is_init.put(var_name, true);
         return true;
     }
 

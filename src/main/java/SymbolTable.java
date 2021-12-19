@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SymbolTable {
@@ -54,5 +55,13 @@ public class SymbolTable {
 
     public boolean var_is_init(String currentMethod, String var_name) {
         return methodInfos.get(currentMethod).var_is_init(var_name);
+    }
+
+    public List<Type> get_params(String method_name) {
+        return methodInfos.get(method_name).getParams();
+    }
+
+    public Type get_method_return_type(String method_name) {
+        return methodInfos.get(method_name).getType();
     }
 }

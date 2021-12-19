@@ -17,6 +17,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     private Boolean comparing = false;
 
     private final SymbolTable symbolTable;
+    private String called_method = "";
 
 
     public TypeChecker(SymbolTable symbolTable) {
@@ -122,7 +123,14 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     @Override
     public void caseAReturnStatementAbstract(AReturnStatementAbstract node) {
         LinkedList<PExpressionAbstract> returnValues = node.getReturnValues();
-        for (PExpressionAbstract subNode : returnValues) subNode.apply(this);
+        currentType = symbolTable.get_method_return_type(currentMethod);
+
+        for (PExpressionAbstract subNode : returnValues){
+            subNode.apply(this);
+            if (currentType != symbolTable.get_method_return_type(currentMethod))
+                throw new TypeCheckerException("Wrong return type " + currentType + " for Method " + currentMethod);
+        }
+
 
         resetType();
     }
@@ -293,15 +301,23 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         TIdentifier identifier = node.getIdentifier();
         LinkedList<PArgumentListAbstract> arguments = node.getArguments();
 
+        called_method = identifier.getText();
+
         //TODO: check if parameters check out for invoked method 'identifier'
 
         for (PArgumentListAbstract argument : arguments) argument.apply(this);
+
     }
 
     @Override
     public void caseAIdentifierExpressionAbstract(AIdentifierExpressionAbstract node){
         TIdentifier identifier = node.getIdentifier();
 
+        // case 1: finding identifier in params
+
+
+
+        // case 2: finding identifier inside a method
         Type id_type = symbolTable.get_var(currentMethod, identifier.getText());
 
         if (!symbolTable.var_is_init(currentMethod, identifier.getText()))
@@ -635,8 +651,30 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract first = node.getFirst();
         LinkedList<PExpressionAbstract> follow = node.getFollow();
 
+        int counter = 0;
+        List<Type> params = symbolTable.get_params(called_method);
+
+        if (params.size() == 0) throw new TypeCheckerException("Method '" + called_method + "' called with too few arguments.");
+
+        currentType = params.get(counter);
+        counter++;
+
         first.apply(this);
-        for (PExpressionAbstract f : follow) f.apply(this);
+
+        for (PExpressionAbstract f : follow) {
+            if (counter >= params.size()) throw new TypeCheckerException("Method '" + called_method + "' called with too many arguments.");
+            currentType = params.get(counter);
+            f.apply(this);
+
+            counter++;
+        }
+
+        if (counter < params.size()) throw new TypeCheckerException("Method '" + called_method + "' called with too few arguments.");
+
+
+
+        called_method = "";
+
     }
 
     @Override
@@ -645,6 +683,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         LinkedList<PParameterAbstract> follow = node.getFollow();
 
         first.apply(this);
+
         for (PParameterAbstract f : follow) f.apply(this);
     }
 
@@ -652,6 +691,13 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     public void caseAParamParameterAbstract(AParamParameterAbstract node){
         PTypeAbstract type = node.getType();
         TIdentifier identifier = node.getIdentifier();
+
+        type.apply(this);
+
+        symbolTable.decl_param(currentMethod, identifier.getText(), get_var_type(type));
+
+        identifier.apply(this);
+
     }
 
 }
