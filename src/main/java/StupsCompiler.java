@@ -27,7 +27,7 @@ public class StupsCompiler {
             inputAsList = Files.lines(path_to_file).collect(Collectors.toList());
         }
         catch (IOException e) {
-            System.err.println("ERROR: no such file found, try another path");
+            System.err.println("ERROR: no such file found, try another path. Path was: " + path_to_file);
             return;
         }
 
@@ -87,12 +87,11 @@ public class StupsCompiler {
                 System.err.println(e.getMessage());
                 parseErrorFound = true;
                 System.exit(1);
-            } catch (TypeCheckerException e) {
+            } catch (TypeCheckerException | SymbolTableException e) {
                 System.err.println(e.getMessage());
                 typeCheckErrorFound = true;
-
-
             }
+
         if (!parseErrorFound) System.out.println("parsing successful");
         if (!typeCheckErrorFound) System.out.println("typecheck successful");
     }

@@ -14,17 +14,13 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     private Type currentType;
     private String currentMethod;
+    private Boolean comparing = false;
 
     private final SymbolTable symbolTable;
 
 
     public TypeChecker(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
-    }
-
-    private void assertEqual(Type type1, Type type2) throws TypeCheckerException {
-        if (type1 != type2) throw new TypeCheckerException(type1 + " and " + type2 + " expected same, but different");
-
     }
 
     private Type get_var_type(PTypeAbstract node) {
@@ -35,6 +31,25 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         if (currentType == STRING) return STRING;
 
         return null;
+    }
+
+    private void resetType() {
+        currentType = null;
+    }
+
+    private boolean comparable(PExpressionAbstract left, PExpressionAbstract right) {
+        comparing = true;
+
+        left.apply(this);
+        Type l1 = currentType;
+        right.apply(this);
+        Type r1 = currentType;
+
+        comparing = false;
+
+        if((l1 == INTEGER && r1 == DOUBLE) ||(l1 == DOUBLE && r1 == INTEGER)) return true;
+
+        return l1 == r1;
     }
 
     @Override
@@ -66,6 +81,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         type.apply(this);
 
+        // set current method name
         currentMethod = node.getIdentifier().getText();
         symbolTable.decl_method(currentMethod, get_var_type(type));
 
@@ -78,6 +94,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         LinkedList<PParameterListAbstract> parameterList = node.getParameterList();
         PStatementAbstract codeBlock = node.getCodeBlock();
 
+        // set current method name
         currentMethod = node.getIdentifier().getText();
         symbolTable.decl_method(currentMethod, Type.VOID);
 
@@ -87,36 +104,48 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     }
 
      @Override
-     public void caseAAssignmentStatementAbstract (AAssignmentStatementAbstract node) {
+     public void caseAAssignmentStatementAbstract(AAssignmentStatementAbstract node) {
         TIdentifier identifier = node.getIdentifier();
         PExpressionAbstract value = node.getValue();
 
         identifier.apply(this);
+
+        // TODO: check for Identifiers type
+        currentType = symbolTable.get_var(currentMethod, identifier.getText());
+
         value.apply(this);
+
+        symbolTable.assign_var(currentMethod, identifier.getText());
+        resetType();
     }
 
     @Override
-    public void caseAReturnStatementAbstract (AReturnStatementAbstract node) {
+    public void caseAReturnStatementAbstract(AReturnStatementAbstract node) {
         LinkedList<PExpressionAbstract> returnValues = node.getReturnValues();
         for (PExpressionAbstract subNode : returnValues) subNode.apply(this);
+
+        resetType();
     }
 
     @Override
-    public void caseADeclStatementStatementAbstract (ADeclStatementStatementAbstract node) {
+    public void caseADeclStatementStatementAbstract(ADeclStatementStatementAbstract node) {
+
         PTypeAbstract type = node.getType();
         TIdentifier identifier = node.getIdentifier();
 
         String var_name = identifier.getText();
         Type var_type = get_var_type(type);
-        symbolTable.decl_local_variable(currentMethod, var_name, var_type);
 
-
+        symbolTable.decl_local_variable(currentMethod, var_name, var_type, false);
 
         type.apply(this);
         identifier.apply(this);
+
+        resetType();
     }
 
-    public void caseAInitStatementStatementAbstract (AInitStatementStatementAbstract node) {
+    public void caseAInitStatementStatementAbstract(AInitStatementStatementAbstract node) {
+
         PTypeAbstract type = node.getType();
         TIdentifier identifier = node.getIdentifier();
         PExpressionAbstract expression = node.getExpression();
@@ -124,39 +153,49 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         String var_name = identifier.getText();
         Type var_type = get_var_type(type);
 
-        symbolTable.decl_local_variable(currentMethod, var_name, var_type);
+        symbolTable.decl_local_variable(currentMethod, var_name, var_type, true);
 
         type.apply(this);
         identifier.apply(this);
+        expression.apply(this);
+
+        resetType();
     }
 
+
     @Override
-    public void caseAWriteLineStatementAbstract (AWriteLineStatementAbstract node) {
+    public void caseAWriteLineStatementAbstract(AWriteLineStatementAbstract node) {
         PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
 
         expressionAbstract.apply(this);
+
+        resetType();
     }
 
     @Override
-    public void caseAIfStatementAbstract (AIfStatementAbstract node) {
+    public void caseAIfStatementAbstract(AIfStatementAbstract node) {
         PExpressionAbstract condition = node.getCondition();
         PStatementAbstract aTrue = node.getTrue();
 
         condition.apply(this);
-        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType.toString());
+        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         aTrue.apply(this);
+
+        resetType();
     }
 
     @Override
-    public void caseAIfElseStatementAbstract (AIfElseStatementAbstract node) {
+    public void caseAIfElseStatementAbstract(AIfElseStatementAbstract node) {
         PExpressionAbstract condition = node.getCondition();
         PStatementAbstract aTrue = node.getTrue();
         PStatementAbstract aFalse = node.getFalse();
 
         condition.apply(this);
-        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType.toString());
+        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         aTrue.apply(this);
         aFalse.apply(this);
+
+        resetType();
     }
 
     @Override
@@ -166,50 +205,67 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PStatementAbstract aFalse = node.getFalse();
 
         condition.apply(this);
-        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType.toString());
+        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         aTrue.apply(this);
         aFalse.apply(this);
+
+        resetType();
     }
 
     @Override
     public void caseAWhileStatementAbstract(AWhileStatementAbstract node){
         node.getCondition().apply(this);
-        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType.toString());
+        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         node.getTrue().apply(this);
+
+        resetType();
     }
 
     @Override
     public void caseAWhileNoShortIfStatementAbstract(AWhileNoShortIfStatementAbstract node) {
         node.getCondition().apply(this);
-        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType.toString());
+        if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException("Expected Type: 'bool'\nactual Type: " + currentType);
         node.getTrue().apply(this);
+
+        resetType();
     }
 
     @Override
     public void caseACodeBlockStatementAbstract(ACodeBlockStatementAbstract node) {
         LinkedList<PStatementAbstract> statements = node.getStatementAbstract();
         for (PStatementAbstract stmt : statements) stmt.apply(this);
+
+        resetType();
     }
 
     @Override
     public void caseABoolLiteralAbstract(ABoolLiteralAbstract node) {
+        if (!(currentType == BOOLEAN) && !comparing)
+            throw new TypeCheckerException("Expected Type: " + currentType + "\nactual: BOOLEAN");
         currentType = BOOLEAN;
     }
 
     @Override
     public void caseAIntLiteralAbstract(AIntLiteralAbstract node) {
+        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing)
+            throw new TypeCheckerException("Expected Type: " + currentType + "\nactual: INTEGER");
         currentType = INTEGER;
     }
 
     @Override
     public void caseADoubleLiteralAbstract(ADoubleLiteralAbstract node) {
+        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing)
+            throw new TypeCheckerException("Expected Type: " + currentType + "\nactual: DOUBLE");
         currentType = DOUBLE;
     }
-
     @Override
     public void caseAStringLiteralAbstract(AStringLiteralAbstract node) {
-        currentType = STRING;
+        if (!(currentType == STRING) && !comparing)
+            throw new TypeCheckerException("Expected Type: " + currentType + "\nactual: STRING");
+        if (comparing) currentType = STRING;
+
     }
+
 
     @Override
     public void caseAIntTypeAbstract(AIntTypeAbstract node) {
@@ -236,6 +292,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     public void caseAInvokeExpressionAbstract(AInvokeExpressionAbstract node) {
         TIdentifier identifier = node.getIdentifier();
         LinkedList<PArgumentListAbstract> arguments = node.getArguments();
+
         //TODO: check if parameters check out for invoked method 'identifier'
 
         for (PArgumentListAbstract argument : arguments) argument.apply(this);
@@ -245,6 +302,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     public void caseAIdentifierExpressionAbstract(AIdentifierExpressionAbstract node){
         TIdentifier identifier = node.getIdentifier();
 
+        Type id_type = symbolTable.get_var(currentMethod, identifier.getText());
+
+        if (!symbolTable.var_is_init(currentMethod, identifier.getText()))
+            throw new TypeCheckerException("Variable '" + identifier.getText() +
+                    "' in Method '" + currentMethod +
+                    "' only declared, not initialised");
+
+        if (!(((id_type == INTEGER || id_type == DOUBLE) && (currentType == INTEGER || currentType == DOUBLE))
+                || (id_type == STRING && currentType == STRING)
+                || (id_type == BOOLEAN && currentType == BOOLEAN))) {
+            if (!comparing) throw new TypeCheckerException("Identifier: Expected Type: " + currentType +
+                       "\nactual: " + id_type);
+            else throw new TypeCheckerException("Types not comparable2, can't calculate a boolean");
+        }
         identifier.apply(this);
     }
 
@@ -273,7 +344,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     public void caseANotExpressionAbstract(ANotExpressionAbstract node) {
         PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
 
+        currentType = BOOLEAN;
+
         expressionAbstract.apply(this);
+
         if (currentType != BOOLEAN) throw new TypeCheckerException( "Expected: BOOLEAN\n" +
                                                                     "actual: " + currentType.toString());
     }
@@ -288,11 +362,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         left.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
         right.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         if (isDouble) currentType = DOUBLE;
@@ -307,11 +381,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         left.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                                                                         "actual: " + currentType.toString());
         right.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         if (isDouble) currentType = DOUBLE;
@@ -327,11 +401,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         left.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
         right.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         if (isDouble) currentType = DOUBLE;
@@ -349,7 +423,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         left.apply(this);
         if (currentType == DOUBLE) isDouble = true;
         else if (currentType == STRING) isString = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER, DOUBLE or STRING\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER, DOUBLE or STRING; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
@@ -360,7 +434,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
             currentType = STRING;
             return;
         }
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER, DOUBLE or STRING\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER, DOUBLE or STRING; " +
                 "actual: " + currentType.toString());
 
         if (isDouble) currentType = DOUBLE;
@@ -376,12 +450,12 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         left.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
         if (currentType == DOUBLE) isDouble = true;
-        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        else if (currentType != INTEGER) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         if (isDouble) currentType = DOUBLE;
@@ -393,15 +467,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
+        // for BOOLEAN: '3 < 5' expects number, but currentType would be BOOLEAN
+        // --> later revert
+        currentType = INTEGER;
 
         left.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
+        // revert
         currentType = BOOLEAN;
     }
 
@@ -410,15 +489,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
+        // for BOOLEAN: '3 < 5' expects number, but currentType would be BOOLEAN
+        // --> later revert
+        currentType = INTEGER;
 
         left.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
+        // revert
         currentType = BOOLEAN;
     }
 
@@ -429,15 +513,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
+        // for BOOLEAN: '3 < 5' expects number, but currentType would be BOOLEAN
+        // --> later revert
+        currentType = INTEGER;
 
         left.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
+        // revert
         currentType = BOOLEAN;
     }
 
@@ -446,15 +535,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
+        // for BOOLEAN: '3 < 5' expects number, but currentType would be BOOLEAN
+        // --> later revert
+        currentType = INTEGER;
 
         left.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
         right.apply(this);
-        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE\n" +
+        if (!(currentType == INTEGER || currentType == DOUBLE)) throw new TypeCheckerException("Expected: INTEGER or DOUBLE; " +
                 "actual: " + currentType.toString());
 
+        // revert
         currentType = BOOLEAN;
     }
 
@@ -463,18 +557,22 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
-        boolean isIntegerOrDouble = false;
-        boolean isString = false;
-        boolean isBoolean = false;
+//        boolean isIntegerOrDouble = false;
+//        boolean isString = false;
+//        boolean isBoolean = false;
 
+        if(!comparable(left, right))
+            throw new TypeCheckerException("Types not comparable, can't calculate a boolean");
+        /*
         left.apply(this);
+
         if (currentType == INTEGER || currentType == DOUBLE) isIntegerOrDouble = true;
         else if (currentType == BOOLEAN) isBoolean = true;
         else if (currentType == STRING) isString = true;
 
         right.apply(this);
         if ((currentType == INTEGER || currentType == DOUBLE) && isIntegerOrDouble) currentType = BOOLEAN;
-        else if (currentType == STRING && isBoolean) currentType = BOOLEAN;
+        else if (currentType == STRING && isString) currentType = BOOLEAN;
         else if (currentType == BOOLEAN && isBoolean) currentType = BOOLEAN;
         else {
             String m = "";
@@ -482,9 +580,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
             else if (isIntegerOrDouble) m = "INTEGER or DOUBLE";
             else if (isString) m = "STRING";
 
-            throw new TypeCheckerException( "'==' expected: " + m + "\n" +
+            throw new TypeCheckerException( "'==' expected: " + m + "; " +
                                             "actual: " + currentType.toString());
+
         }
+        */
     }
 
     @Override
@@ -492,28 +592,13 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
-        boolean isIntegerOrDouble = false;
-        boolean isString = false;
-        boolean isBoolean = false;
+//        boolean isIntegerOrDouble = false;
+//        boolean isString = false;
+//        boolean isBoolean = false;
 
-        left.apply(this);
-        if (currentType == INTEGER || currentType == DOUBLE) isIntegerOrDouble = true;
-        else if (currentType == BOOLEAN) isBoolean = true;
-        else if (currentType == STRING) isString = true;
+        if(!comparable(left, right))
+            throw new TypeCheckerException("Types not comparable, can't calculate a boolean");
 
-        right.apply(this);
-        if ((currentType == INTEGER || currentType == DOUBLE) && isIntegerOrDouble) currentType = BOOLEAN;
-        else if (currentType == STRING && isBoolean) currentType = BOOLEAN;
-        else if (currentType == BOOLEAN && isBoolean) currentType = BOOLEAN;
-        else {
-            String m = "";
-            if (isIntegerOrDouble) m = "INTEGER or DOUBLE";
-            else if (isString) m = "STRING";
-            else if (isBoolean) m = "BOOLEAN";
-
-            throw new TypeCheckerException( "'!=' expected: " + m + "\n" +
-                    "actual: " + currentType.toString());
-        }
     }
 
     @Override
@@ -522,10 +607,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (currentType != BOOLEAN) throw new TypeCheckerException( "'&&' expected: BOOLEAN\n" +
+        if (currentType != BOOLEAN) throw new TypeCheckerException( "'&&' expected: BOOLEAN; " +
                                                                     "actual: " + currentType.toString());
         right.apply(this);
-        if (currentType != BOOLEAN) throw new TypeCheckerException( "'&&' expected: BOOLEAN\n" +
+        if (currentType != BOOLEAN) throw new TypeCheckerException( "'&&' expected: BOOLEAN; " +
                                                                     "actual: " + currentType.toString());
         currentType = BOOLEAN;
     }
@@ -536,10 +621,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (currentType != BOOLEAN) throw new TypeCheckerException( "'||' expected: BOOLEAN\n" +
+        if (currentType != BOOLEAN) throw new TypeCheckerException( "'||' expected: BOOLEAN; " +
                 "actual: " + currentType.toString());
         right.apply(this);
-        if (currentType != BOOLEAN) throw new TypeCheckerException( "'||' expected: BOOLEAN\n" +
+        if (currentType != BOOLEAN) throw new TypeCheckerException( "'||' expected: BOOLEAN; " +
                 "actual: " + currentType.toString());
         currentType = BOOLEAN;
     }

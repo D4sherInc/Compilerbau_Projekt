@@ -6,17 +6,15 @@ namespace HelloWorld
     {
         static void Main(string[] args)
         {
-            int x  = 3;
-            int y = 45;
-
-            string c  = "!" + "not";
-            string a = "23432";
-            string b = "ffff";
-            int g = 2243;
-            string wew = "222" + b;
-
-            string d = a + b;
+            bool b = true;
+            bool c = false;
+            int x = 3;
+            int y = 5;
+            double z = 3.4;
+            bool d  = !(3 > z) || x > c;
 
         }
+
+
     }
 }
