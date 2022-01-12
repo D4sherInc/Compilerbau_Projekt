@@ -10,7 +10,7 @@ namespace HelloWorld
             Console.WriteLine(Fib(10));
         }
 
-        static int Fib(int n)
+        static int Fib(int true)
         {
             if (n > 0) {
                 if (n <= 2) {

@@ -12,7 +12,7 @@ namespace HelloWorld
             bool whatif = false;
 
             // this is a one line comment
-            Console.WriteLine(calc(3));
+            Console.WriteLine(3);
 
             /*
             this is a block comment
