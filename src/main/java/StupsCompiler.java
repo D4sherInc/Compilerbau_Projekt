@@ -17,82 +17,23 @@ import java.util.stream.Collectors;
 
 public class StupsCompiler {
     public static void main(String[] args) throws IOException, LexerException, ParserException {
+
         // java StupsCompiler <filepath>
         // java StupsCompiler minimal.cs
         Path path_to_file = Paths.get(args[0]);
-        List<String> inputAsList;
 
-        // try-catch for IOException: wrong filepath
-        try{
-            inputAsList = Files.lines(path_to_file).collect(Collectors.toList());
-        }
-        catch (IOException e) {
-            System.err.printf("ERROR: no such file found, try another path. Path was: %s%n", path_to_file.toString());
-            return;
-        }
+        // if wrong path: IOException in StupsLexer
+        StupsLexer stupsLexer = new StupsLexer(path_to_file);
+        stupsLexer.lex();
 
-        String input = new Scanner(new File(String.valueOf(path_to_file))).useDelimiter("\\Z").next();
+        //
+        StupsParser stupsParser = new StupsParser(path_to_file);
 
-        boolean success = lex(inputAsList);
-        if (success) parse(input);
+        Start tree = stupsParser.parse();
+
+        StupsTypeChecker stupsTypeChecker = new StupsTypeChecker(tree);
+        stupsTypeChecker.typechecking();
+
+        //parse(input);
     }
-
-    private static boolean lex(List<String> input) throws IOException {
-        boolean lexErrorFound = false;
-        int lineCounter = 1;
-        for (String line : input) {
-            StringReader reader = new StringReader(line);
-            PushbackReader r = new PushbackReader(reader);
-            Lexer l = new Lexer(r);
-            Token token;
-            do {
-
-                // try-catch for lexical error: token not found --> print "unknown token: 't'"
-                // add Whitespace token (gets ignored), --> keep going
-                try{
-                    token = l.next();
-                }
-                catch (LexerException e) {
-                    System.err.printf("ERROR ON LINE %d:%s%n" ,lineCounter, e.getMessage().substring(e.getMessage().indexOf("]") + 1));
-                    System.err.println(e.getMessage());
-                    token = new TWhitespace(" ");
-                    lexErrorFound = true;
-                }
-            } while (!(token instanceof EOF));
-            lineCounter++;
-        }
-
-        if (!lexErrorFound) System.out.println("lexing successful");
-        return !lexErrorFound;
-    }
-
-    private static void parse(String input) throws IOException, ParserException, LexerException, TypeCheckerException {
-            StringReader reader = new StringReader(input);
-            PushbackReader r = new PushbackReader(reader, 100);
-            Lexer l = new Lexer(r);
-            Parser parser = new Parser(l);
-
-            boolean parseErrorFound = false;
-            boolean typeCheckErrorFound = false;
-
-            try {
-                Start tree = parser.parse();
-
-                SymbolTable symbolTable = new SymbolTable();
-                TypeChecker typeChecker = new TypeChecker(symbolTable);
-                tree.apply(typeChecker);
-
-            } catch (ParserException e) {
-                System.err.printf("LINE %d: found '%s', expected: %s%n", e.getToken().getLine(), e.getToken().getText(), e.getMessage().substring(e.getMessage().indexOf('\'')));
-                parseErrorFound = true;
-                System.exit(1);
-            } catch (TypeCheckerException | SymbolTableException e) {
-                System.err.println(e.getMessage());
-                typeCheckErrorFound = true;
-            }
-
-        if (!parseErrorFound) System.out.println("parsing successful");
-        if (!typeCheckErrorFound) System.out.println("typecheck successful");
-    }
-
 }
