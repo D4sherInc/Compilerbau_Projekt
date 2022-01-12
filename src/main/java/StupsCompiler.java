@@ -53,7 +53,7 @@ public class StupsCompiler {
                     token = l.next();
                 }
                 catch (LexerException e) {
-                    System.err.println("ERROR ON LINE " + lineCounter + ":" + e.getMessage().substring(e.getMessage().indexOf("]") + 1));
+                    System.err.printf("ERROR ON LINE %d:%s%n" ,lineCounter, e.getMessage().substring(e.getMessage().indexOf("]") + 1));
                     System.err.println(e.getMessage());
                     token = new TWhitespace(" ");
                     lexErrorFound = true;
@@ -83,8 +83,7 @@ public class StupsCompiler {
                 tree.apply(typeChecker);
 
             } catch (ParserException e) {
-                System.err.println("LINE " + e.getToken().getLine() + ": found '" + e.getToken().getText() + "', expected: " + e.getMessage().substring(e.getMessage().indexOf('\'')));
-                System.err.println(e.getMessage());
+                System.err.printf("LINE %d: found '%s', expected: %s%n", e.getToken().getLine(), e.getToken().getText(), e.getMessage().substring(e.getMessage().indexOf('\'')));
                 parseErrorFound = true;
                 System.exit(1);
             } catch (TypeCheckerException | SymbolTableException e) {
