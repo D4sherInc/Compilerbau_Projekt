@@ -27,7 +27,7 @@ public class StupsCompiler {
             inputAsList = Files.lines(path_to_file).collect(Collectors.toList());
         }
         catch (IOException e) {
-            System.err.println("ERROR: no such file found, try another path. Path was: " + path_to_file);
+            System.err.printf("ERROR: no such file found, try another path. Path was: %s%n", path_to_file.toString());
             return;
         }
 
