@@ -1,7 +1,7 @@
 import node.Start;
 
-
-
+// self written class, called by StupsCompiler
+// extra class for testing
 public class StupsTypeChecker {
 
     private Start tree;
@@ -10,18 +10,18 @@ public class StupsTypeChecker {
 
 
     public StupsTypeChecker(Start tree) {
-    this.tree = tree;
+        this.tree = tree;
         SymbolTable symbolTable = new SymbolTable();
         this.typeChecker = new TypeChecker(symbolTable);
     }
 
 
     public void typechecking() {
-    try {
-        tree.apply(typeChecker);
-    } catch (TypeCheckerException | SymbolTableException e) {
-        throw new TypeCheckerException(String.format("Type ERROR: %s", e.getMessage()));
-    }
+        try {
+            tree.apply(typeChecker);
+        } catch (TypeCheckerException | SymbolTableException e) {
+            throw new TypeCheckerException(String.format("Type ERROR: %s", e.getMessage()));
+        }
 
     }
 }

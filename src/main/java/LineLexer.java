@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class LineLexer {
     public static void main(String[] args) throws IOException, LexerException {
-        Path path = Paths.get("typechecktest.cs");
+        Path path = Paths.get("src/main/cs/fibonacci.cs");
         List<String> input = Files.lines(path).collect(Collectors.toList());
         int lineCounter = 1;
         for (String line : input) {

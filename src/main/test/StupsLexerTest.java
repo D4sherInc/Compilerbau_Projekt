@@ -15,25 +15,27 @@ public class StupsLexerTest {
     public void setUp() {
     }
 
-    @Test(expected = IOException.class)
-    public void file_not_exisiting() throws IOException {
+    @Test
+    public void file_not_exisiting() {
         try{
             StupsLexer stupsLexer = new StupsLexer(Path.of(""));
+            fail("missing IOException: 'file not found'");
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("ERROR: no such file found, try another path. Path was:"));
-            throw e;
         }
     }
 
-    @Test(expected = LexerException.class)
-    public void lex_unknownToken() throws LexerException, IOException {
+    @Test
+    public void lex_unknownToken() throws IOException {
         StupsLexer stupsLexer = new StupsLexer(Path.of("src/main/test/cs/lex_unknownToken.cs"));
         try{
             stupsLexer.lex();
+            fail("missing LexerException: 'Unknown Token'");
         }
         catch (LexerException le) {
             assertTrue(le.getMessage().contains("Unknown token:"));
-            throw le;
         }
     }
+
+    //TODO: more tests
 }

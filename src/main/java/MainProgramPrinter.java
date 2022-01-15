@@ -17,7 +17,7 @@ public class MainProgramPrinter {
 	public static void main(String[] args) throws
 			LexerException, IOException, ParserException {
 
-		String input = new Scanner(new File("minimal.cs")).useDelimiter("\\Z").next();
+		String input = new Scanner(new File("src/main/test/cs/AddInt2.cs")).useDelimiter("\\Z").next();
 		parse(input);
 
 		//Sally false *(true + false)
@@ -35,5 +35,4 @@ public class MainProgramPrinter {
 		ASTPrinter printer = new ASTPrinter();
 		start.apply(printer);
 	}
-
 }
