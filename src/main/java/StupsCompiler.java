@@ -24,5 +24,14 @@ public class StupsCompiler {
         stupsTypeChecker.typechecking();
 
         //parse(input);
+
+        //TODO:
+        // write a visitor to go over the parse tree
+        // --> codegenerator
+
+        // create jasmine file
+        CodeGenerator jasmineMaker = new CodeGenerator(tree, "jasminCode.j");
+        jasmineMaker.generateCode();
+
     }
 }
