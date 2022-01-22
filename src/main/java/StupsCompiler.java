@@ -4,6 +4,7 @@ import parser.ParserException;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Scanner;
 
 public class StupsCompiler {
     public static void main(String[] args) throws IOException, LexerException, ParserException {
@@ -31,8 +32,14 @@ public class StupsCompiler {
         // --> codegenerator
 
         // create jasmine file
-        CodeGenerator jasmineMaker = new CodeGenerator(tree, "jasminCode.j");
-        jasmineMaker.generateCode();
+        CodeGenerator jasmineMaker = new CodeGenerator(st, tree, "src/main/resources/JasminCode.j");
+        File jasmin = jasmineMaker.getJasmin();
+
+        Scanner input = new Scanner(jasmin);
+        System.out.println("\n\nGenerated Jasmin file: \n");
+        while(input.hasNextLine()){
+            System.out.println(input.nextLine());
+        }
 
     }
 }

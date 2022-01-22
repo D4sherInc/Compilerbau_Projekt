@@ -1,4 +1,4 @@
-// visits parsetree
+// visits parse tree
 // generates a .j jasmine file
 
 import analysis.DepthFirstAdapter;
@@ -7,15 +7,13 @@ import node.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class CodeGenerator extends DepthFirstAdapter {
 
     private final File jasmin;
     private final Start tree;
+    private final SymbolTable symbolTable;
     private StringBuilder jasminString;
 
 
@@ -23,6 +21,7 @@ public class CodeGenerator extends DepthFirstAdapter {
     private static final Type DOUBLE = Type.DOUBLE;
     private static final Type BOOLEAN = Type.BOOLEAN;
     private static final Type STRING = Type.STRING;
+    private static final Type VOID = Type.VOID;
 
     // get all vars from symbolTable
     private final Map<String, Set<String>> method_vars;
@@ -39,12 +38,14 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     private String currentMethod;
     private Type currentType;
-
+    private final Stack<Type> topStackPeek;
 
     public CodeGenerator(SymbolTable symbolTable, Start tree, String filepath) {
         this.jasmin = new File(filepath);
         this.tree = tree;
         this.method_vars = new HashMap<>();
+        this.symbolTable = symbolTable;
+        this.topStackPeek = new Stack<>();
 
         // add all vars in HashMap
         for (String method_name : symbolTable.getMethodInfos().keySet()) {
@@ -58,6 +59,7 @@ public class CodeGenerator extends DepthFirstAdapter {
     }
 
     public File getJasmin() {
+        System.out.println("\n\nfinal stack: \n" + topStackPeek.toString());
         return jasmin;
     }
 
@@ -73,6 +75,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
             // base jasmin code prefix
             fw.write(".bytecode 49.0\n" +
+                    ".source " + filename + ".j\n"+
                     ".class public " + filename + "\n" +
                     ".super java/lang/Object\n" +
                     "\n");
@@ -126,14 +129,13 @@ public class CodeGenerator extends DepthFirstAdapter {
         start_new_method(currentMethod);
 
         PStatementAbstract statementAbstract = node.getStatementAbstract();
-        jasminString.append(
-                ".method public static main([Ljava/lang/String;)V\n" +
-                "\t.limit stack 255\n" +
-                "\t.limit locals " + method_vars.get(currentMethod).size() + "\n");
-
+        jasminString.append(".method public static main([Ljava/lang/String;)V\n" +
+                "\t.limit stack 20\n" +
+                "\t.limit locals ").append(varsOnStack.keySet().size() + 1).append("\n");
         statementAbstract.apply(this);
 
-        jasminString.append("\t.end method\n" +
+        jasminString.append("\treturn\n" +
+                "\t.end method\n" +
                 "\n");
 
         currentMethod = null;
@@ -143,22 +145,72 @@ public class CodeGenerator extends DepthFirstAdapter {
     @Override
     public void caseATypeMethodDeclarationAbstract(ATypeMethodDeclarationAbstract node) {
         TIdentifier identifier = node.getIdentifier();
-        LinkedList<PParameterListAbstract> parameterList = node.getParameterList();
         PStatementAbstract codeBlock = node.getCodeBlock();
 
         currentMethod = identifier.getText();
         start_new_method(currentMethod);
 
+
+        jasminString.append(".method public static ").append(currentMethod).append("(");
+
+        // append one for every type of parameter
+        for (Type t : symbolTable.getMethodInfos().get(currentMethod).getParams()) {
+            if (t == INTEGER) jasminString.append("I");
+            else if(t == DOUBLE) jasminString.append("D");
+            else if(t == BOOLEAN) jasminString.append("Z");
+            else if(t == STRING) jasminString.append("Ljava/lang/String;");
+        }
+        jasminString.append(")");
+
+        // append return type
+        Type returnType = symbolTable.get_method_return_type(currentMethod);
+        if (returnType == INTEGER) jasminString.append("I");
+        else if(returnType == DOUBLE) jasminString.append("D");
+        else if(returnType == BOOLEAN) jasminString.append("Z");
+        else if(returnType == STRING) jasminString.append("Ljava/lang/String;");
+        else if(returnType == VOID) jasminString.append("V");
+
+        jasminString.append("\n\t.limit stack 20\n" +
+                "\t.limit locals ").append(varsOnStack.keySet().size() + 1).append("\n");
+
         codeBlock.apply(this);
 
+        jasminString.append("\t.end method\n" +
+                "\n");
+
+        topStackPeek.pop();
         currentMethod = null;
-
     }
-
 
     @Override
     public void caseAVoidMethodDeclarationAbstract(AVoidMethodDeclarationAbstract node) {
-        super.caseAVoidMethodDeclarationAbstract(node);
+        TIdentifier identifier = node.getIdentifier();
+        PStatementAbstract codeBlock = node.getCodeBlock();
+
+        currentMethod = identifier.getText();
+        start_new_method(currentMethod);
+
+
+        jasminString.append(".method public static ").append(currentMethod).append("(");
+
+        // append one for every type of parameter
+        for (Type t : symbolTable.getMethodInfos().get(currentMethod).getParams()) {
+            if (t == INTEGER) jasminString.append("I");
+            else if(t == DOUBLE) jasminString.append("D");
+            else if(t == BOOLEAN) jasminString.append("Z");
+            else if(t == STRING) jasminString.append("Ljava/lang/String;");
+        }
+        // return type = void -> V
+        jasminString.append(")V\n" +
+                "\t.limit stack 20\n" +
+                "\t.limit locals ").append(varsOnStack.keySet().size() + 1).append("\n");
+
+        codeBlock.apply(this);
+
+        jasminString.append("\treturn\n" +
+                "\t.end method\n" + "\n");
+
+        currentMethod = null;
     }
 
     @Override
@@ -168,6 +220,10 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         value.apply(this);
 
+        currentType = symbolTable.get_var(currentMethod, identifier.getText());
+
+        check_for_typecast();
+
         int currentIdentifierNum = varsOnStack.get(identifier.getText());
 
         jasminString.append("\t");
@@ -176,16 +232,38 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if(currentType == DOUBLE) jasminString.append("d");
         else if(currentType == STRING || currentType == BOOLEAN) jasminString.append("a");
 
-
-
-        jasminString.append("store " + currentIdentifierNum + "\n");
+        jasminString.append("store ").append(currentIdentifierNum).append("\n");
+        topStackPeek.pop();
     }
 
     @Override
     public void caseAReturnStatementAbstract(AReturnStatementAbstract node) {
-        super.caseAReturnStatementAbstract(node);
+        LinkedList<PExpressionAbstract> returnValues = node.getReturnValues();
+
+        currentType = symbolTable.get_method_return_type(currentMethod);
+
+        for (PExpressionAbstract rv : returnValues) rv.apply(this);
+
+        jasminString.append("\t");
+
+        switch (currentType) {
+            case INTEGER:
+                jasminString.append("i");
+                break;
+            case DOUBLE:
+                jasminString.append("d");
+                break;
+            case STRING:
+            case BOOLEAN:
+                jasminString.append("a");
+                break;
+        }
+
+        jasminString.append("return\n");
+        currentType = null;
     }
 
+    // int i;
     @Override
     public void caseADeclStatementStatementAbstract(ADeclStatementStatementAbstract node) {
         super.caseADeclStatementStatementAbstract(node);
@@ -203,13 +281,16 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         int currentIdentifierNum = varsOnStack.get(identifier.getText());
 
+        check_for_typecast();
+
         jasminString.append("\t");
 
         if (currentType == INTEGER) jasminString.append("i");
         else if (currentType == DOUBLE) jasminString.append("d");
         else if (currentType == STRING) jasminString.append("a");
 
-        jasminString.append("store " + currentIdentifierNum + "\n");
+        jasminString.append("store ").append(currentIdentifierNum).append("\n");
+        topStackPeek.pop();
 
     }
 
@@ -251,21 +332,25 @@ public class CodeGenerator extends DepthFirstAdapter {
     @Override
     public void caseABoolLiteralAbstract(ABoolLiteralAbstract node) {
         super.caseABoolLiteralAbstract(node);
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
     public void caseAIntLiteralAbstract(AIntLiteralAbstract node) {
-        jasminString.append("\tldc " + node.getIntValue() + "\n");
+        jasminString.append("\tldc ").append(node.getIntValue()).append("\n");
+        topStackPeek.push(INTEGER);
     }
 
     @Override
     public void caseADoubleLiteralAbstract(ADoubleLiteralAbstract node) {
-        super.caseADoubleLiteralAbstract(node);
+        jasminString.append("\tldc2_w ").append(node.getDoubleValue()).append("\n");
+        topStackPeek.push(DOUBLE);
     }
 
     @Override
     public void caseAStringLiteralAbstract(AStringLiteralAbstract node) {
-        super.caseAStringLiteralAbstract(node);
+        jasminString.append("\tldc ").append(node.getStringLiteral()).append("\n");
+        topStackPeek.push(STRING);
     }
 
     @Override
@@ -295,7 +380,28 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAIdentifierExpressionAbstract(AIdentifierExpressionAbstract node) {
-        super.caseAIdentifierExpressionAbstract(node);
+        TIdentifier identifier = node.getIdentifier();
+        String var_name = identifier.getText();
+        Type var_type = symbolTable.getMethodInfos().get(currentMethod).get_var(var_name);
+
+        jasminString.append("\t");
+
+        switch(var_type) {
+            case INTEGER:
+                jasminString.append("i");
+                break;
+            case DOUBLE:
+                jasminString.append("d");
+                break;
+            case STRING:
+            case BOOLEAN:
+                jasminString.append("a");
+                break;
+        }
+        int currentIdentifierNum = varsOnStack.get(identifier.getText());
+
+        jasminString.append("load ").append(currentIdentifierNum).append("\n");
+
     }
 
     @Override
@@ -321,22 +427,81 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAMulExpressionAbstract(AMulExpressionAbstract node) {
-        super.caseAMulExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        check_for_typecast();
+        right.apply(this);
+        check_for_typecast();
+
+        jasminString.append("\t");
+
+        if (currentType == INTEGER) jasminString.append("i");
+        else if (currentType == DOUBLE) jasminString.append("d");
+
+        jasminString.append("mul\n");
     }
 
     @Override
     public void caseADivExpressionAbstract(ADivExpressionAbstract node) {
-        super.caseADivExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        check_for_typecast();
+        right.apply(this);
+        check_for_typecast();
+
+        jasminString.append("\t");
+
+        if (currentType == INTEGER) jasminString.append("i");
+        else if (currentType == DOUBLE) jasminString.append("d");
+
+        jasminString.append("div\n");
     }
 
     @Override
     public void caseAModExpressionAbstract(AModExpressionAbstract node) {
         super.caseAModExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        check_for_typecast();
+        right.apply(this);
+        check_for_typecast();
+
+        jasminString.append("\t");
+
+        if (currentType == INTEGER) jasminString.append("i");
+        else if (currentType == DOUBLE) jasminString.append("d");
+
+        jasminString.append("rem\n");
     }
 
     // 3 + 4
     @Override
     public void caseAPlusExpressionAbstract(APlusExpressionAbstract node) {
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        check_for_typecast();
+        right.apply(this);
+        check_for_typecast();
+
+        jasminString.append("\t");
+
+        if (currentType == INTEGER) jasminString.append("i");
+        else if (currentType == DOUBLE) jasminString.append("d");
+
+        jasminString.append("add\n");
+    }
+
+    // 3 - 4
+    @Override
+    public void caseAMinusExpressionAbstract(AMinusExpressionAbstract node) {
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
@@ -349,12 +514,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("add\n");
-
-    }
-
-    @Override
-    public void caseAMinusExpressionAbstract(AMinusExpressionAbstract node) {
-        super.caseAMinusExpressionAbstract(node);
     }
 
     @Override
@@ -414,13 +573,32 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     // helping method to reset stack counter and get all method vars
     private void start_new_method(String method_name) {
-        stackCounter = 1;
+
+        // reserve register0 vor 'String[] args' from main
+        if (method_name.equals("Main")) stackCounter = 1;
+        // if not main, start register count from 0
+        else stackCounter = 0;
+
         varsOnStack = new HashMap<>();
         for (String var_name : method_vars.get(method_name)) {
             varsOnStack.put(var_name, stackCounter);
             stackCounter++;
         }
-
     }
 
+    // check for typecast:
+    // is value on top of stack int and var in stack double? -> i2d
+    // is value on top of stack double and var in stack int? -> d2i
+    private void check_for_typecast() {
+        if (topStackPeek.peek() == INTEGER && currentType == DOUBLE) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        else if (topStackPeek.peek() == DOUBLE && currentType == INTEGER) {
+            jasminString.append("\td2i\n");
+            topStackPeek.pop();
+            topStackPeek.push(INTEGER);
+        }
+    }
 }
