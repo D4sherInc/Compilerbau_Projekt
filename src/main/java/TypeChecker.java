@@ -674,4 +674,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     }
 
+    public SymbolTable getSymbolTable() {
+        return this.symbolTable;
+    }
 }

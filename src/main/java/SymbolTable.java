@@ -3,10 +3,20 @@ import exceptions.SymbolTableException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SymbolTable {
-
     private final Map<String, MethodInfo> methodInfos = new HashMap<>();
+
+
+    public Map<String, MethodInfo> getMethodInfos() {
+        return methodInfos;
+    }
+
+    // for CodeGenerator: get var names to put on stack
+    public Set<String> get_var_and_param_names(String method_name) {
+        return methodInfos.get(method_name).get_var_and_param_names();
+    }
 
     // declare method
     public void decl_method(final String method_name, final Type method_type) {

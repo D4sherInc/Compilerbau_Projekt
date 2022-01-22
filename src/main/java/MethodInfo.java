@@ -16,6 +16,15 @@ public class MethodInfo {
         return return_type;
     }
 
+    // for CodeGenerator: get all var names to put on stack
+    public Set<String> get_var_and_param_names() {
+        // all params
+        Set<String> collect = params.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+        // join all params with all vars
+        collect.addAll(vars.keySet());
+        return collect;
+    }
+
     public List<Type> getParams() {
         return params.stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }

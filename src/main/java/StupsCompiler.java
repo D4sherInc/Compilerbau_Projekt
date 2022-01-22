@@ -22,6 +22,7 @@ public class StupsCompiler {
 
         StupsTypeChecker stupsTypeChecker = new StupsTypeChecker(tree);
         stupsTypeChecker.typechecking();
+        SymbolTable st = stupsTypeChecker.getSymbolTable();
 
         //parse(input);
 

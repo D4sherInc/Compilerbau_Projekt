@@ -24,6 +24,9 @@ public class StupsTypeChecker {
         } catch (TypeCheckerException | SymbolTableException e) {
             throw new TypeCheckerException(String.format("Type ERROR: %s", e.getMessage()));
         }
+    }
 
+    public SymbolTable getSymbolTable() {
+        return typeChecker.getSymbolTable();
     }
 }
