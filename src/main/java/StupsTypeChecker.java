@@ -1,3 +1,5 @@
+import exceptions.SymbolTableException;
+import exceptions.TypeCheckerException;
 import node.Start;
 
 // self written class, called by StupsCompiler

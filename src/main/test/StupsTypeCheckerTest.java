@@ -1,3 +1,4 @@
+import exceptions.TypeCheckerException;
 import lexer.LexerException;
 import node.Start;
 import org.junit.Before;

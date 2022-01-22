@@ -1,3 +1,5 @@
+package helpingstuff;
+
 import lexer.Lexer;
 import lexer.LexerException;
 import node.EOF;

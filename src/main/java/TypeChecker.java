@@ -1,4 +1,5 @@
 import analysis.ReversedDepthFirstAdapter;
+import exceptions.TypeCheckerException;
 import node.*;
 
 import java.util.LinkedList;
