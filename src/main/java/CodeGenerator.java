@@ -420,7 +420,14 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAUnaryMinusExpressionAbstract(AUnaryMinusExpressionAbstract node) {
-        super.caseAUnaryMinusExpressionAbstract(node);
+        PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
+
+        expressionAbstract.apply(this);
+
+        if (topStackPeek.peek() == INTEGER) jasminString.append("\ti");
+        else if (topStackPeek.peek() == DOUBLE) jasminString.append("\td");
+
+        jasminString.append("neg\n");
     }
 
     @Override
