@@ -552,7 +552,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("add\n");
     }
 
-    // 3 < 4
     @Override
     public void caseALtExpressionAbstract(ALtExpressionAbstract node) {
         PExpressionAbstract left = node.getLeft();
@@ -759,12 +758,32 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
-        super.caseAAndExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        right.apply(this);
+
+        jasminString.append("\tiand\n");
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
     public void caseAOrExpressionAbstract(AOrExpressionAbstract node) {
-        super.caseAOrExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        right.apply(this);
+
+        jasminString.append("\tior\n");
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
