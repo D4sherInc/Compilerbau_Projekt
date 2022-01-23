@@ -42,7 +42,8 @@ public class CodeGenerator extends DepthFirstAdapter {
     private int branchCounter;
 
     public CodeGenerator(SymbolTable symbolTable, Start tree, String filepath) {
-        this.jasmin = new File(filepath);
+        String filename = filepath + ".j";
+        this.jasmin = new File(filename);
         this.tree = tree;
         this.method_vars = new HashMap<>();
         this.symbolTable = symbolTable;
@@ -54,7 +55,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         }
 
         // cut: '/path/to/filename.j' -> 'filename'
-        String filename = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.length() - 2);
+        //String filename = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.length() - 2);
 
         generateCode(filename);
     }
