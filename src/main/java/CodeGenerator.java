@@ -491,7 +491,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("rem\n");
     }
 
-    // 3 + 4
     @Override
     public void caseAPlusExpressionAbstract(APlusExpressionAbstract node) {
         PExpressionAbstract left = node.getLeft();
@@ -510,7 +509,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("add\n");
     }
 
-    // 3 - 4
     @Override
     public void caseAMinusExpressionAbstract(AMinusExpressionAbstract node) {
         PExpressionAbstract left = node.getLeft();
@@ -546,9 +544,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             topStackPeek.push(DOUBLE);
         }
 
-        // compare: if less than, then push "true" (int 1) on top of stack
         jasminString.append("\tdcmpg\n" +
-                // compare: if less than, then push "true" (int 1) on top of stack
                 "\tiflt Else").append(branchCounter).append("\n" +
                 "" + "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
@@ -582,9 +578,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             topStackPeek.push(DOUBLE);
         }
 
-        // compare: if less than, then push "true" (int 1) on top of stack
         jasminString.append("\tdcmpg\n" +
-                // compare: if less than, then push "true" (int 1) on top of stack
                 "\tifgt Else").append(branchCounter).append("\n" +
                 "" + "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
@@ -617,9 +611,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             topStackPeek.push(DOUBLE);
         }
 
-        // compare: if less than, then push "true" (int 1) on top of stack
         jasminString.append("\tdcmpg\n" +
-                // compare: if less than, then push "true" (int 1) on top of stack
                 "\tifle Else").append(branchCounter).append("\n" +
                 "" + "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
@@ -652,9 +644,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             topStackPeek.push(DOUBLE);
         }
 
-        // compare: if less than, then push "true" (int 1) on top of stack
         jasminString.append("\tdcmpg\n" +
-                // compare: if less than, then push "true" (int 1) on top of stack
                 "\tifge Else").append(branchCounter).append("\n" +
                 "" + "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
@@ -671,13 +661,74 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAEqualsExpressionAbstract(AEqualsExpressionAbstract node) {
-        super.caseAEqualsExpressionAbstract(node);
+        //TODO:
+        //  check for strings and booleans
+
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        jasminString.append("\tdcmpg\n" +
+                "\tifeq Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
     public void caseANotEqualsExpressionAbstract(ANotEqualsExpressionAbstract node) {
-        super.caseANotEqualsExpressionAbstract(node);
-    }
+        //TODO:
+        //  check for strings and booleans
+
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        jasminString.append("\tdcmpg\n" +
+                "\tifne Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);    }
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
