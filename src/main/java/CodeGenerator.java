@@ -297,7 +297,21 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAWriteLineStatementAbstract(AWriteLineStatementAbstract node) {
-        super.caseAWriteLineStatementAbstract(node);
+        PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
+
+        jasminString.append("\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n");
+
+        expressionAbstract.apply(this);
+
+        // convert boolean value on top to printable value 'false' / 'true'
+        if (topStackPeek.peek() == BOOLEAN) swap_int_and_bool_on_top_of_stack();
+
+        jasminString.append("\tinvokevirtual java/io/PrintStream/println(");
+        if (topStackPeek.peek() == STRING || topStackPeek.peek() == BOOLEAN) jasminString.append("Ljava/lang/String;");
+        else if (topStackPeek.peek() == INTEGER) jasminString.append("I");
+        jasminString.append(")V\n");
+
+        topStackPeek.pop();
     }
 
     @Override
@@ -387,6 +401,8 @@ public class CodeGenerator extends DepthFirstAdapter {
         TIdentifier identifier = node.getIdentifier();
         String var_name = identifier.getText();
         Type var_type = symbolTable.getMethodInfos().get(currentMethod).get_var(var_name);
+
+        topStackPeek.push(var_type);
 
         jasminString.append("\t");
 
@@ -755,7 +771,11 @@ public class CodeGenerator extends DepthFirstAdapter {
         super.caseAParamParameterAbstract(node);
     }
 
-    // helping method to reset stack counter and get all method vars
+//--------------------------------------------------------------------------------------------------------------------//
+// HELPING METHOD SECTION
+//--------------------------------------------------------------------------------------------------------------------//
+
+    // reset stack counter and get all method vars
     private void start_new_method(String method_name) {
 
         // reserve register0 vor 'String[] args' from main
@@ -789,4 +809,21 @@ public class CodeGenerator extends DepthFirstAdapter {
             topStackPeek.push(INTEGER);
         }
     }
+
+    // when bool val is used, then swap Integer and String on top of stack:
+    // 0 <--> 'false'
+    // 1 <--> 'true'
+    private void swap_int_and_bool_on_top_of_stack() {
+        jasminString.append("\tifeq UseFalse").append(stackCounter).append("\n" +
+                "\tldc \"true\"\n" +
+                "\tgoto L").append(stackCounter).append("\n" +
+                "\tUseFalse").append(stackCounter).append(":\n" +
+                "\tldc \"false\"\n" +
+                "\tL").append(stackCounter).append(":\n");
+        stackCounter++;
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
+    }
+
+
 }
