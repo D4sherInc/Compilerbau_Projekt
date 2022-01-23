@@ -449,7 +449,18 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseANotExpressionAbstract(ANotExpressionAbstract node) {
-        super.caseANotExpressionAbstract(node);
+        PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
+
+        expressionAbstract.apply(this);
+
+        jasminString.append("\tifeq TrueToFalse").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tTrueToFalse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
     }
 
     @Override
