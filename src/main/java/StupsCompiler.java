@@ -13,8 +13,7 @@ public class StupsCompiler {
         // java StupsCompiler minimal.cs
         Path path_to_file = Paths.get(args[0]);
         String filename = path_to_file.toString();
-        if (filename.contains("/")) filename = filename.substring(filename.lastIndexOf("/")+1, filename.length()-3);
-        else filename = filename.substring(filename.length()-2);
+        filename = filename.substring(filename.lastIndexOf("/")+1, filename.length()-3);
 
         // if wrong path: IOException in StupsLexer
         StupsLexer stupsLexer = new StupsLexer(path_to_file);

@@ -53,11 +53,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         for (String method_name : symbolTable.getMethodInfos().keySet()) {
             method_vars.put(method_name, symbolTable.get_var_and_param_names(method_name));
         }
-
-        // cut: '/path/to/filename.j' -> 'filename'
-        //String filename = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.length() - 2);
-
-        generateCode(filename);
+        generateCode(filepath);
     }
 
     public File getJasmin() {
