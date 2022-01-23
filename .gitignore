@@ -16,5 +16,11 @@
 /.idea/
 /.gradle/
 
+# every non-critical file, used for scrap testing
+/src/main/java/helpingstuff/
+
+# .cs save files that are permanently changed
+/src/main/test/cs/
+
 # every generated class file
 *.class
