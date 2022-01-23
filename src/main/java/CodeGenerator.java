@@ -228,9 +228,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\t");
 
-        if (currentType == INTEGER) jasminString.append("i");
+        if (currentType == INTEGER || currentType == BOOLEAN) jasminString.append("i");
         else if(currentType == DOUBLE) jasminString.append("d");
-        else if(currentType == STRING || currentType == BOOLEAN) jasminString.append("a");
+        else if(currentType == STRING) jasminString.append("a");
 
         jasminString.append("store ").append(currentIdentifierNum).append("\n");
         topStackPeek.pop();
@@ -248,13 +248,13 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         switch (currentType) {
             case INTEGER:
+            case BOOLEAN:
                 jasminString.append("i");
                 break;
             case DOUBLE:
                 jasminString.append("d");
                 break;
             case STRING:
-            case BOOLEAN:
                 jasminString.append("a");
                 break;
         }
@@ -285,7 +285,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\t");
 
-        if (currentType == INTEGER) jasminString.append("i");
+        if (currentType == INTEGER || currentType == BOOLEAN) jasminString.append("i");
         else if (currentType == DOUBLE) jasminString.append("d");
         else if (currentType == STRING) jasminString.append("a");
 
@@ -331,7 +331,10 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseABoolLiteralAbstract(ABoolLiteralAbstract node) {
-        super.caseABoolLiteralAbstract(node);
+        jasminString.append("\tldc ");
+        String bool_val = node.getBool().getText();
+        if (bool_val.equals("false")) jasminString.append("0\n");
+        else jasminString.append("1\n");
         topStackPeek.push(BOOLEAN);
     }
 
@@ -388,13 +391,13 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         switch(var_type) {
             case INTEGER:
+            case BOOLEAN:
                 jasminString.append("i");
                 break;
             case DOUBLE:
                 jasminString.append("d");
                 break;
             case STRING:
-            case BOOLEAN:
                 jasminString.append("a");
                 break;
         }
