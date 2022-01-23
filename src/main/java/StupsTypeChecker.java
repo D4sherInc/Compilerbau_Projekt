@@ -19,11 +19,14 @@ public class StupsTypeChecker {
 
 
     public void typechecking() {
+
+        System.out.println("start typechecking...");
         try {
             tree.apply(typeChecker);
         } catch (TypeCheckerException | SymbolTableException e) {
             throw new TypeCheckerException(String.format("Type ERROR: %s", e.getMessage()));
         }
+        System.out.println("typecheck successful!\n");
     }
 
     public SymbolTable getSymbolTable() {

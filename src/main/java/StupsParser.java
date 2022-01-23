@@ -36,7 +36,7 @@ public class StupsParser {
             throw new ParserException(e.getToken(), String.format("LINE %d: found '%s', expected: %s%n", e.getToken().getLine(), e.getToken().getText(), e.getMessage().substring(e.getMessage().indexOf(':'))));
         }
 
-        System.out.println("parsing successful!");
+        System.out.println("parsing successful!\n");
         return tree;
     }
 }

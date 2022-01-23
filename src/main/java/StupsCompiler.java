@@ -17,19 +17,12 @@ public class StupsCompiler {
         StupsLexer stupsLexer = new StupsLexer(path_to_file);
         stupsLexer.lex();
 
-        //
         StupsParser stupsParser = new StupsParser(path_to_file);
         Start tree = stupsParser.parse();
 
         StupsTypeChecker stupsTypeChecker = new StupsTypeChecker(tree);
         stupsTypeChecker.typechecking();
         SymbolTable st = stupsTypeChecker.getSymbolTable();
-
-        //parse(input);
-
-        //TODO:
-        // write a visitor to go over the parse tree
-        // --> codegenerator
 
         // create jasmine file
         CodeGenerator jasmineMaker = new CodeGenerator(st, tree, "src/main/resources/JasminCode.j");
