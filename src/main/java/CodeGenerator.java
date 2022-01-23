@@ -39,6 +39,7 @@ public class CodeGenerator extends DepthFirstAdapter {
     private String currentMethod;
     private Type currentType;
     private final Stack<Type> topStackPeek;
+    private int branchCounter;
 
     public CodeGenerator(SymbolTable symbolTable, Start tree, String filepath) {
         this.jasmin = new File(filepath);
@@ -331,7 +332,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseABoolLiteralAbstract(ABoolLiteralAbstract node) {
-        jasminString.append("\tldc ");
+        jasminString.append("\ticonst_");
         String bool_val = node.getBool().getText();
         if (bool_val.equals("false")) jasminString.append("0\n");
         else jasminString.append("1\n");
@@ -526,24 +527,146 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("add\n");
     }
 
+    // 3 < 4
     @Override
     public void caseALtExpressionAbstract(ALtExpressionAbstract node) {
-        super.caseALtExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        // compare: if less than, then push "true" (int 1) on top of stack
+        jasminString.append("\tdcmpg\n" +
+                // compare: if less than, then push "true" (int 1) on top of stack
+                "\tiflt Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
+
     }
 
     @Override
     public void caseAGtExpressionAbstract(AGtExpressionAbstract node) {
-        super.caseAGtExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        // compare: if less than, then push "true" (int 1) on top of stack
+        jasminString.append("\tdcmpg\n" +
+                // compare: if less than, then push "true" (int 1) on top of stack
+                "\tifgt Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
     public void caseALteqExpressionAbstract(ALteqExpressionAbstract node) {
-        super.caseALteqExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        // compare: if less than, then push "true" (int 1) on top of stack
+        jasminString.append("\tdcmpg\n" +
+                // compare: if less than, then push "true" (int 1) on top of stack
+                "\tifle Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
     public void caseAGteqExpressionAbstract(AGteqExpressionAbstract node) {
-        super.caseAGteqExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+        right.apply(this);
+        if (topStackPeek.peek() == INTEGER) {
+            jasminString.append("\ti2d\n");
+            topStackPeek.pop();
+            topStackPeek.push(DOUBLE);
+        }
+
+        // compare: if less than, then push "true" (int 1) on top of stack
+        jasminString.append("\tdcmpg\n" +
+                // compare: if less than, then push "true" (int 1) on top of stack
+                "\tifge Else").append(branchCounter).append("\n" +
+                "" + "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "\tElse").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "\tL").append(branchCounter).append(":\n");
+
+        branchCounter++;
+
+        topStackPeek.pop();
+        topStackPeek.pop();
+        topStackPeek.push(BOOLEAN);
     }
 
     @Override
@@ -588,6 +711,10 @@ public class CodeGenerator extends DepthFirstAdapter {
         if (method_name.equals("Main")) stackCounter = 1;
         // if not main, start register count from 0
         else stackCounter = 0;
+
+        // if branches from if-else / while / cmp will occur --> counter for branches
+        // eg: if --> else0; if --> else1...
+        branchCounter = 0;
 
         varsOnStack = new HashMap<>();
         for (String var_name : method_vars.get(method_name)) {
