@@ -549,7 +549,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         if (currentType == INTEGER) jasminString.append("i");
         else if (currentType == DOUBLE) jasminString.append("d");
 
-        jasminString.append("add\n");
+        jasminString.append("sub\n");
     }
 
     @Override
