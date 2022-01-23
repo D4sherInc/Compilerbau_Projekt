@@ -16,6 +16,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     private Type currentType;
     private String currentMethod;
     private Boolean comparing = false;
+    private Boolean using_value = false;
     private Boolean hasReturn;
 
     private final SymbolTable symbolTable;
@@ -188,10 +189,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
     @Override
     public void caseAWriteLineStatementAbstract(AWriteLineStatementAbstract node) {
         PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
-
+        using_value = true;
         expressionAbstract.apply(this);
 
         resetType();
+        using_value = false;
     }
 
     @Override
@@ -202,9 +204,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         condition.apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
         aTrue.apply(this);
-
-
-
     }
 
     @Override
@@ -284,20 +283,20 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     @Override
     public void caseAIntLiteralAbstract(AIntLiteralAbstract node) {
-        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing)
+        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing && !using_value)
             throw new TypeCheckerException(String.format("Expected Type: %s\nactual: INTEGER", currentType));
         currentType = INTEGER;
     }
 
     @Override
     public void caseADoubleLiteralAbstract(ADoubleLiteralAbstract node) {
-        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing)
+        if (!(currentType == INTEGER || currentType == DOUBLE) && !comparing && !using_value)
             throw new TypeCheckerException(String.format("Expected Type: %s\nactual: DOUBLE", currentType));
         currentType = DOUBLE;
     }
     @Override
     public void caseAStringLiteralAbstract(AStringLiteralAbstract node) {
-        if (!(currentType == STRING) && !comparing)
+        if (!(currentType == STRING) && !comparing && !using_value)
             throw new TypeCheckerException(String.format("Expected Type: %s\nactual: STRING", currentType));
         if (comparing) currentType = STRING;
 
@@ -353,8 +352,9 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         if (!(((id_type == INTEGER || id_type == DOUBLE) && (currentType == INTEGER || currentType == DOUBLE))
                 || (id_type == STRING && currentType == STRING)
-                || (id_type == BOOLEAN && currentType == BOOLEAN))) {
-            if (!comparing)
+                || (id_type == BOOLEAN && currentType == BOOLEAN)
+                || using_value)) {
+            if (!comparing )
                 throw new TypeCheckerException(String.format("Identifier: Expected Type: %s; actual: %s", currentType, id_type));
             else throw new TypeCheckerException("Types not comparable2, can't calculate a boolean");
         }
