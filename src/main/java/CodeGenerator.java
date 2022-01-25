@@ -61,9 +61,13 @@ public class CodeGenerator extends DepthFirstAdapter {
         return jasmin;
     }
 
-    private String generateCode(String filename) {
+    private String generateCode(String filepath) {
         stackCounter = 0;
         varsOnStack = new HashMap<>();
+
+        String filename = filepath.substring(filepath.lastIndexOf("\\") + 1);
+        filename = filename.substring(filename.lastIndexOf("/") + 1);
+        System.out.println("start generating code:");
 
         //generate program specific jasmin code
         String jasminOutput = visitParseTree(tree);
@@ -85,6 +89,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             e.printStackTrace();
         }
 
+        System.out.println("Generated " + filepath + ".j");
         return jasminOutput;
 
     }
@@ -97,9 +102,6 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         return jasminString.toString();
     }
-
-    //TODO:
-    // for every AST node, add code to jasmin file
 
     @Override
     public void caseStart(Start node) {
@@ -328,7 +330,20 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAWhileStatementAbstract(AWhileStatementAbstract node) {
-        super.caseAWhileStatementAbstract(node);
+        PExpressionAbstract condition = node.getCondition();
+        PStatementAbstract aTrue = node.getTrue();
+
+        // save counter outside of loop, so that the code inside the while does not
+        // count up and fucks up order
+        String goto_loop_finished = "\tifeq Done" + branchCounter + "\n";
+        String goto_loop_start_and_finish_label = "\tgoto While" + branchCounter + "\n" +
+                "\tDone" + branchCounter + ":\n";
+
+        jasminString.append("\tWhile").append(branchCounter).append(":\n");
+        condition.apply(this);
+        jasminString.append(goto_loop_finished);
+        aTrue.apply(this);
+        jasminString.append(goto_loop_start_and_finish_label);
     }
 
     @Override
