@@ -250,8 +250,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     @Override
     public void caseAWhileStatementAbstract(AWhileStatementAbstract node){
+        using_value = true;
         node.getCondition().apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
+
+        using_value = false;
         node.getTrue().apply(this);
 
         resetType();
@@ -276,7 +279,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     @Override
     public void caseABoolLiteralAbstract(ABoolLiteralAbstract node) {
-        if (!(currentType == BOOLEAN) && !comparing)
+        if (!(currentType == BOOLEAN) && !comparing && !using_value)
             throw new TypeCheckerException(String.format("Expected Type: %s\nactual: BOOLEAN", currentType));
         currentType = BOOLEAN;
     }
