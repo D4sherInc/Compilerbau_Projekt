@@ -42,7 +42,8 @@ public class CodeGenerator extends DepthFirstAdapter {
     private int branchCounter;
 
     public CodeGenerator(SymbolTable symbolTable, Start tree, String filepath) {
-        this.jasmin = new File(filepath);
+        String filename = filepath + ".j";
+        this.jasmin = new File(filename);
         this.tree = tree;
         this.method_vars = new HashMap<>();
         this.symbolTable = symbolTable;
@@ -52,17 +53,11 @@ public class CodeGenerator extends DepthFirstAdapter {
         for (String method_name : symbolTable.getMethodInfos().keySet()) {
             method_vars.put(method_name, symbolTable.get_var_and_param_names(method_name));
         }
-
-        // cut: '/path/to/filename.j' -> 'filename'
-        String filename = filepath.substring(filepath.lastIndexOf("/") + 1, filepath.length() - 2);
-
-        System.out.println("start generating Jasmin Code...");
-        generateCode(filename);
-        System.out.println("Codegeneration finished: new File: " + filepath);
+        generateCode(filepath);
     }
 
     public File getJasmin() {
-//        System.out.println("\n\nfinal stack: \n" + topStackPeek.toString());
+        System.out.println("\n\nfinal stack: \n" + topStackPeek.toString());
         return jasmin;
     }
 
@@ -103,6 +98,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         return jasminString.toString();
     }
 
+    //TODO:
+    // for every AST node, add code to jasmin file
+
     @Override
     public void caseStart(Start node) {
 
@@ -116,8 +114,11 @@ public class CodeGenerator extends DepthFirstAdapter {
         LinkedList<PMethodDeclarationAbstract> nonMainStuff2 = node.getNonMainStuff2();
 
         for (PMethodDeclarationAbstract subNode : nonMainStuff1) subNode.apply(this);
+
         mainMethod.apply(this);
+
         for (PMethodDeclarationAbstract subNode : nonMainStuff2) subNode.apply(this);
+
     }
 
     @Override
@@ -136,6 +137,7 @@ public class CodeGenerator extends DepthFirstAdapter {
                 "\n");
 
         currentMethod = null;
+
     }
 
     @Override
@@ -259,11 +261,13 @@ public class CodeGenerator extends DepthFirstAdapter {
         currentType = null;
     }
 
+    // int i;
     @Override
     public void caseADeclStatementStatementAbstract(ADeclStatementStatementAbstract node) {
         super.caseADeclStatementStatementAbstract(node);
     }
 
+    // int x = 3;
     @Override
     public void caseAInitStatementStatementAbstract(AInitStatementStatementAbstract node) {
         PTypeAbstract type = node.getType();
@@ -285,6 +289,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("store ").append(currentIdentifierNum).append("\n");
         topStackPeek.pop();
+
     }
 
     @Override
@@ -308,36 +313,26 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAIfStatementAbstract(AIfStatementAbstract node) {
-        //TODO
-
         super.caseAIfStatementAbstract(node);
     }
 
     @Override
     public void caseAIfElseStatementAbstract(AIfElseStatementAbstract node) {
-        //TODO
-
         super.caseAIfElseStatementAbstract(node);
     }
 
     @Override
     public void caseAIfElseNoShortIfStatementAbstract(AIfElseNoShortIfStatementAbstract node) {
-        // TODO
-
         super.caseAIfElseNoShortIfStatementAbstract(node);
     }
 
     @Override
     public void caseAWhileStatementAbstract(AWhileStatementAbstract node) {
-        //TODO
-
         super.caseAWhileStatementAbstract(node);
     }
 
     @Override
     public void caseAWhileNoShortIfStatementAbstract(AWhileNoShortIfStatementAbstract node) {
-        //TODO
-
         super.caseAWhileNoShortIfStatementAbstract(node);
     }
 
@@ -395,8 +390,6 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAInvokeExpressionAbstract(AInvokeExpressionAbstract node) {
-        //TODO
-
         super.caseAInvokeExpressionAbstract(node);
     }
 
@@ -453,18 +446,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseANotExpressionAbstract(ANotExpressionAbstract node) {
-        PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
-
-        expressionAbstract.apply(this);
-
-        jasminString.append("\tifeq TrueToFalse").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
-                "\tgoto L").append(branchCounter).append("\n" +
-                "\tTrueToFalse").append(branchCounter).append(":\n" +
-                "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
-
-        branchCounter++;
+        super.caseANotExpressionAbstract(node);
     }
 
     @Override
@@ -553,9 +535,10 @@ public class CodeGenerator extends DepthFirstAdapter {
         if (currentType == INTEGER) jasminString.append("i");
         else if (currentType == DOUBLE) jasminString.append("d");
 
-        jasminString.append("sub\n");
+        jasminString.append("add\n");
     }
 
+    // 3 < 4
     @Override
     public void caseALtExpressionAbstract(ALtExpressionAbstract node) {
         PExpressionAbstract left = node.getLeft();
@@ -762,32 +745,12 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
-        PExpressionAbstract left = node.getLeft();
-        PExpressionAbstract right = node.getRight();
-
-        left.apply(this);
-        right.apply(this);
-
-        jasminString.append("\tiand\n");
-
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        super.caseAAndExpressionAbstract(node);
     }
 
     @Override
     public void caseAOrExpressionAbstract(AOrExpressionAbstract node) {
-        PExpressionAbstract left = node.getLeft();
-        PExpressionAbstract right = node.getRight();
-
-        left.apply(this);
-        right.apply(this);
-
-        jasminString.append("\tior\n");
-
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        super.caseAOrExpressionAbstract(node);
     }
 
     @Override
@@ -858,4 +821,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         topStackPeek.pop();
         topStackPeek.push(BOOLEAN);
     }
+
+
 }
