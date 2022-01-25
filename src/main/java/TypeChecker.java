@@ -262,8 +262,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
     @Override
     public void caseAWhileNoShortIfStatementAbstract(AWhileNoShortIfStatementAbstract node) {
+        using_value = true;
         node.getCondition().apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
+
+        using_value = false;
         node.getTrue().apply(this);
 
         resetType();
