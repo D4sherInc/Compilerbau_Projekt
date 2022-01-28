@@ -24,7 +24,7 @@ namespace HelloWorld
                 j = 9;
             }
 
-            //while short if
+            //while if-else with nested short if-else
             while (i <30)
             {
                 if (i < 25)
@@ -32,6 +32,13 @@ namespace HelloWorld
                     else Console.WriteLine("if if else");
                 else Console.WriteLine("if (if) else");
                 i =i + 1;
+            }
+
+            while (i < 55)
+            {
+                if (i > 52) Console.WriteLine("last steps");
+                else Console.WriteLine("a few more steps");
+                i = i + 1;
             }
 
         }
