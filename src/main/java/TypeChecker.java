@@ -201,9 +201,13 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PExpressionAbstract condition = node.getCondition();
         PStatementAbstract aTrue = node.getTrue();
 
+        using_value = true;
+
         condition.apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
         aTrue.apply(this);
+
+        using_value = false;
     }
 
     @Override
@@ -212,6 +216,8 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PStatementAbstract aTrue = node.getTrue();
         PStatementAbstract aFalse = node.getFalse();
 
+         using_value= true;
+
         condition.apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
 
@@ -224,7 +230,10 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         Boolean falseHasReturn = hasReturn;
 
         // only if both if and else have a return, the method as a whole has a return
-        hasReturn = (trueHasReturn && falseHasReturn) || beforeHasReturn;
+        hasReturn = (symbolTable.get_method_return_type(currentMethod)== Type.VOID)
+                    || (trueHasReturn && falseHasReturn) || beforeHasReturn;
+
+        using_value = false;
     }
 
     @Override
@@ -233,6 +242,8 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         PStatementAbstract aTrue = node.getTrue();
         PStatementAbstract aFalse = node.getFalse();
 
+        using_value = true;
+
         condition.apply(this);
         if (!currentType.equals(Type.BOOLEAN)) throw new TypeCheckerException(String.format("Expected Type: 'bool'\nactual Type: %s", currentType));
 
@@ -245,7 +256,11 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         Boolean falseHasReturn = hasReturn;
 
         // only if both if and else have a return, the method as a whole has a return
-        hasReturn = (trueHasReturn && falseHasReturn) || beforeHasReturn;
+        // void methods don't need returns
+        hasReturn = (symbolTable.get_method_return_type(currentMethod)== Type.VOID)
+                    ||(trueHasReturn && falseHasReturn) || beforeHasReturn;
+
+        using_value = false;
     }
 
     @Override
@@ -360,11 +375,12 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
                 || (id_type == STRING && currentType == STRING)
                 || (id_type == BOOLEAN && currentType == BOOLEAN)
                 || using_value)) {
-            if (!comparing )
+            if (!comparing)
                 throw new TypeCheckerException(String.format("Identifier: Expected Type: %s; actual: %s", currentType, id_type));
             else throw new TypeCheckerException("Types not comparable2, can't calculate a boolean");
         }
         identifier.apply(this);
+        if (comparing) currentType = symbolTable.get_var(currentMethod, identifier.getText());
     }
 
     @Override
@@ -591,6 +607,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         if(!comparable(left, right))
             throw new TypeCheckerException("Types not comparable, can't calculate a boolean");
 
+        currentType = BOOLEAN;
     }
 
     @Override
@@ -601,6 +618,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         if(!comparable(left, right))
             throw new TypeCheckerException("Types not comparable, can't calculate a boolean");
 
+        currentType = BOOLEAN;
     }
 
     @Override
