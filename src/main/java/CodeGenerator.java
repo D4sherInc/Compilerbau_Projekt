@@ -315,21 +315,100 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAIfStatementAbstract(AIfStatementAbstract node) {
-        super.caseAIfStatementAbstract(node);
+        PExpressionAbstract condition = node.getCondition();
+        PStatementAbstract aTrue = node.getTrue();
+
+        condition.apply(this);
+
+        jasminString.append("\tifeq False").append(branchCounter).append("\n");
+
+        // save counter outside of loop, so that the code inside the while does not count up and fucks up order
+        String label_false = "\tFalse" + branchCounter + ":\n";
+
+        aTrue.apply(this);
+
+        jasminString.append(label_false);
+
+        branchCounter++;
     }
 
     @Override
     public void caseAIfElseStatementAbstract(AIfElseStatementAbstract node) {
-        super.caseAIfElseStatementAbstract(node);
+        PExpressionAbstract condition = node.getCondition();
+        PStatementAbstract aTrue = node.getTrue();
+        PStatementAbstract aFalse = node.getFalse();
+
+        condition.apply(this);
+
+        jasminString.append("\tifeq Else").append(branchCounter).append("\n");
+
+        // save counter outside of loop, so that the code inside the while does not count up and fucks up order
+        String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
+        String label_else = "\tElse" + branchCounter + ":\n";
+        String label_after_else = "\tL" + branchCounter + ":\n";
+
+        branchCounter++;
+
+        aTrue.apply(this);
+
+        jasminString.append(gotoEnd_after_finishing_ifTrue);
+        jasminString.append(label_else);
+
+        aFalse.apply(this);
+
+        jasminString.append(label_after_else);
+
     }
 
     @Override
     public void caseAIfElseNoShortIfStatementAbstract(AIfElseNoShortIfStatementAbstract node) {
-        super.caseAIfElseNoShortIfStatementAbstract(node);
+        PExpressionAbstract condition = node.getCondition();
+        PStatementAbstract aTrue = node.getTrue();
+        PStatementAbstract aFalse = node.getFalse();
+
+        condition.apply(this);
+
+        jasminString.append("\tifeq Else").append(branchCounter).append("\n");
+
+        // save counter outside of loop, so that the code inside the while does not count up and fucks up order
+        String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
+        String label_else = "\tElse" + branchCounter + ":\n";
+        String label_after_else = "\tL" + branchCounter + ":\n";
+
+        branchCounter++;
+
+        aTrue.apply(this);
+
+        jasminString.append(gotoEnd_after_finishing_ifTrue);
+        jasminString.append(label_else);
+
+        aFalse.apply(this);
+
+        jasminString.append(label_after_else);
+
     }
 
     @Override
     public void caseAWhileStatementAbstract(AWhileStatementAbstract node) {
+        PExpressionAbstract condition = node.getCondition();
+        PStatementAbstract aTrue = node.getTrue();
+
+        // save counter outside of loop, so that the code inside the while does not count up and fucks up order
+        String goto_loop_finished = "\tifeq Done" + branchCounter + "\n";
+        String goto_loop_start_and_finish_label = "\tgoto While" + branchCounter + "\n" +
+                "\tDone" + branchCounter + ":\n";
+
+        jasminString.append("\tWhile").append(branchCounter).append(":\n");
+        condition.apply(this);
+        jasminString.append(goto_loop_finished);
+        aTrue.apply(this);
+        jasminString.append(goto_loop_start_and_finish_label);
+
+        branchCounter++;
+    }
+
+    @Override
+    public void caseAWhileNoShortIfStatementAbstract(AWhileNoShortIfStatementAbstract node) {
         PExpressionAbstract condition = node.getCondition();
         PStatementAbstract aTrue = node.getTrue();
 
@@ -344,11 +423,8 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append(goto_loop_finished);
         aTrue.apply(this);
         jasminString.append(goto_loop_start_and_finish_label);
-    }
 
-    @Override
-    public void caseAWhileNoShortIfStatementAbstract(AWhileNoShortIfStatementAbstract node) {
-        super.caseAWhileNoShortIfStatementAbstract(node);
+        branchCounter++;
     }
 
     @Override
