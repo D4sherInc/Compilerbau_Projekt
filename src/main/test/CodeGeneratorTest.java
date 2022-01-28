@@ -43,7 +43,6 @@ public class CodeGeneratorTest {
 
         assertEquals("basecase.j", testfile.getName());
 
-
         try {
             String content = Files.readString(Path.of(String.valueOf(testfile)));
 
@@ -66,28 +65,27 @@ public class CodeGeneratorTest {
         setUpCodeGenerator(path_to_file);
 
         testfile = codeGenerator.getJasmin();
-        assertEquals("if_else.j", testfile.getName());
 
+        assertEquals("if_else.j", testfile.getName());
         
         try {
             String content = Files.readString(Path.of(String.valueOf(testfile)));
 
             // base if
-            String if_start1 = "\tifeq False1\n";
-            String if_false1 = "\tFalse1:\n";
+            String if_1 = "ifeq False1";
+            String if_false1 = "False1:";
             assertTrue(content
-                    .contains(if_start1));
+                    .contains(if_1));
             assertTrue(content
                     .contains(if_false1));
             
             // check if labels are in the right order
-            assertTrue(content.lastIndexOf(if_start1) < content.lastIndexOf(if_false1));
-            
+            assertTrue(content.lastIndexOf(if_1) < content.lastIndexOf(if_false1));
 
             // short if with else
-            String if_start2 = "ifeq Else5\n";
-            String if_true2_end = "\tgoto L5\n\tElse5:\n";
-            String if_false2_end = "\tL5:";
+            String if_start2 = "ifeq Else5";
+            String if_true2_end = "goto L5\nElse5:";
+            String if_false2_end = "L5:";
 
             assertTrue(content.contains(if_start2));
             assertTrue(content.contains(if_true2_end));
@@ -97,59 +95,32 @@ public class CodeGeneratorTest {
             assertTrue(content.lastIndexOf(if_true2_end) < content.lastIndexOf(if_false2_end));
 
 
-            //TODO
-            // short if with short if-else with else
-            String if_start3 = "ifeq Else7\n";
-            String if_start4_nested = "\tifeq Else8\n";
-            String if_true4_end_nested = "\tgoto L8\n\tElse8:\n";
-            String if4_end = "\tL8:\n:";
-            String if_false4_end_nested = "\tgoto L9\n\tElse9:\n";
-            String if_true3_end = "\tgoto L7\n\tElse7:\n";
-            String if_false3_end = "\tL7:";
+//            if (i != 5)
+//                if (i == 4) Console.WriteLine("nested if yes");
+//                else Console.WriteLine("nested if no");
+//            else Console.WriteLine("outer if no");
 
-            assertTrue(content
-                    .contains("ifeq Else7\n" +
-                            "\tiload 1\n" +
-                            "\ti2d\n" +
-                            "\tldc 4 \n" +
-                            "\ti2d\n" +
-                            "\tdcmpg\n" +
-                            "\tifeq Else8\n" +
-                            "\ticonst_0\n" +
-                            "\tgoto L8\n" +
-                            "\tElse8:\n" +
-                            "\ticonst_1\n" +
-                            "\tL8:\n" +
-                            "\tifeq Else9\n" +
-                            "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                            "\tldc \"if1 if2 true\" \n" +
-                            "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                            "\tgoto L9\n" +
-                            "\tElse9:\n" +
-                            "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                            "\tldc \"if1 if2 false\" \n" +
-                            "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                            "\tL9:\n" +
-                            "\tgoto L7\n" +
-                            "\tElse7:\n" +
-                            "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                            "\tldc \"if1 false\" \n" +
-                            "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                            "\tL7:"));
-            /* assertTrue(content
-                    .contains());
-            assertTrue(content
-                    .contains());
-            assertTrue(content
-                    .contains());
-            assertTrue(content
-                    .contains());
-            assertTrue(content
-                    .contains());
-            assertTrue(content
-                    .contains());
-*/
+            String if_3 = "ifeq Else7";
+            // nested if
+            String if_4_nested = "ifeq Else9";
+            String if_true4_end_nested = "goto L9\nElse9:";
+            String if_false4_end_nested = "L9:\n";
+            // end of first if
+            String if_true3_end = "goto L7\nElse7:";
+            String if_false3_end = "L7:";
 
+            assertTrue(content.contains(if_3));
+            assertTrue(content.contains(if_4_nested));
+            assertTrue(content.contains(if_true4_end_nested));
+            assertTrue(content.contains(if_false4_end_nested));
+            assertTrue(content.contains(if_true3_end));
+            assertTrue(content.contains(if_false3_end));
+
+            assertTrue(content.lastIndexOf(if_3) < content.lastIndexOf(if_4_nested));
+            assertTrue(content.lastIndexOf(if_4_nested) < content.lastIndexOf(if_true4_end_nested));
+            assertTrue(content.lastIndexOf(if_true4_end_nested) < content.lastIndexOf(if_false4_end_nested));
+            assertTrue(content.lastIndexOf(if_false4_end_nested) < content.lastIndexOf(if_true3_end));
+            assertTrue(content.lastIndexOf(if_true3_end) < content.lastIndexOf(if_false3_end));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -171,29 +142,20 @@ public class CodeGeneratorTest {
 //                  Console.WriteLine(i);
 //                  i = i + 1;
 //              }
-            assertTrue(content
-                    .contains("While0:\n" +
-                            "\tiload 1\n" +
-                            "\ti2d\n" +
-                            "\tldc 15 \n" +
-                            "\ti2d\n" +
-                            "\tdcmpg\n" +
-                            "\tiflt Else0\n" +
-                            "\ticonst_0\n" +
-                            "\tgoto L0\n" +
-                            "\tElse0:\n" +
-                            "\ticonst_1\n" +
-                            "\tL0:\n" +
-                            "\tifeq Done0\n" +
-                            "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                            "\tiload 1\n" +
-                            "\tinvokevirtual java/io/PrintStream/println(I)V\n" +
-                            "\tiload 1\n" +
-                            "\tldc 1 \n" +
-                            "\tiadd\n" +
-                            "\tistore 1\n" +
-                            "\tgoto While0\n" +
-                            "\tDone0:"));
+            String while1 = "While0:";
+            String condition1 = "ifeq Done0";
+            String while1_backjump ="goto While0";
+            String while1_end = "Done0:";
+
+            assertTrue(content.contains(while1));
+            assertTrue(content.contains(condition1));
+            assertTrue(content.contains(while1_backjump));
+            assertTrue(content.contains(while1_end));
+
+            // assert right order of labels and jumps
+            assertTrue(content.lastIndexOf(while1) < content.lastIndexOf(condition1));
+            assertTrue(content.lastIndexOf(condition1) < content.lastIndexOf(while1_backjump));
+            assertTrue(content.lastIndexOf(while1_backjump) < content.lastIndexOf(while1_end));
 
 //            while (i <30)
 //            {
@@ -203,70 +165,65 @@ public class CodeGeneratorTest {
 //                else Console.WriteLine("if (if) else");
 //                i =i + 1;
 //            }
-            assertTrue(content
-            .contains("While3:\n" +
-                    "\tiload 1\n" +
-                    "\ti2d\n" +
-                    "\tldc 30 \n" +
-                    "\ti2d\n" +
-                    "\tdcmpg\n" +
-                    "\tiflt Else3\n" +
-                    "\ticonst_0\n" +
-                    "\tgoto L3\n" +
-                    "\tElse3:\n" +
-                    "\ticonst_1\n" +
-                    "\tL3:\n" +
-                    "\tifeq Done3\n" +
-                    "\tiload 1\n" +
-                    "\ti2d\n" +
-                    "\tldc 25 \n" +
-                    "\ti2d\n" +
-                    "\tdcmpg\n" +
-                    "\tiflt Else4\n" +
-                    "\ticonst_0\n" +
-                    "\tgoto L4\n" +
-                    "\tElse4:\n" +
-                    "\ticonst_1\n" +
-                    "\tL4:\n" +
-                    "\tifeq Else5\n" +
-                    "\tiload 1\n" +
-                    "\ti2d\n" +
-                    "\tldc 20 \n" +
-                    "\ti2d\n" +
-                    "\tdcmpg\n" +
-                    "\tifgt Else6\n" +
-                    "\ticonst_0\n" +
-                    "\tgoto L6\n" +
-                    "\tElse6:\n" +
-                    "\ticonst_1\n" +
-                    "\tL6:\n" +
-                    "\tifeq Else7\n" +
-                    "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                    "\tldc \"if if\" \n" +
-                    "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                    "\tgoto L7\n" +
-                    "\tElse7:\n" +
-                    "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                    "\tldc \"if if else\" \n" +
-                    "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                    "\tL7:\n" +
-                    "\tgoto L5\n" +
-                    "\tElse5:\n" +
-                    "\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n" +
-                    "\tldc \"if (if) else\" \n" +
-                    "\tinvokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n" +
-                    "\tL5:\n" +
-                    "\tiload 1\n" +
-                    "\tldc 1 \n" +
-                    "\tiadd\n" +
-                    "\tistore 1\n" +
-                    "\tgoto While3\n" +
-                    "\tDone3:"));
+            String while2 = "While3:";
+            String condition2 = "iflt Else3";
 
+            String if_3 = "ifeq Else5";
+            // nested if
+            String if_4_nested = "ifeq Else7";
+            String if_true4_end_nested = "goto L7\nElse7:";
+            String if_false4_end_nested = "L7:";
+            // end of first if
+            String if_true3_end = "goto L5\nElse5:";
+            String if_false3_end = "L5:";
+
+            String while2_backjump = "goto While3";
+            String while2_end = "Done3";
+
+            assertTrue(content.lastIndexOf(while2) < content.lastIndexOf(condition2));
+            assertTrue(content.lastIndexOf(condition2) < content.lastIndexOf(if_3));
+            assertTrue(content.lastIndexOf(if_3) < content.lastIndexOf(if_4_nested));
+            assertTrue(content.lastIndexOf(if_4_nested) < content.lastIndexOf(if_true4_end_nested));
+            assertTrue(content.lastIndexOf(if_true4_end_nested) < content.lastIndexOf(if_false4_end_nested));
+            assertTrue(content.lastIndexOf(if_false4_end_nested) < content.lastIndexOf(if_true3_end));
+            assertTrue(content.lastIndexOf(if_true3_end) < content.lastIndexOf(if_false3_end));
+            assertTrue(content.lastIndexOf(if_false3_end) < content.lastIndexOf(while2_backjump));
+            assertTrue(content.lastIndexOf(while2_backjump) < content.lastIndexOf(while2_end));
+
+//            while (i < 55)
+//            {
+//                if (i > 52) Console.WriteLine("last steps");
+//                else Console.WriteLine("a few more steps");
+//                i = i + 1;
+//            }
+
+            String while5 = "While9:";
+            String condition5 = "ifeq Done9";
+
+            String if6 = "ifeq Else11";
+            String if_true6_end = "goto L11\nElse11:";
+            String if_false6_end = "L11";
+
+            String while5_backjump = "goto While9";
+            String while5_end = "Done9:";
+
+            assertTrue(content.contains(while5));
+            assertTrue(content.contains(condition5));
+            assertTrue(content.contains(if6));
+            assertTrue(content.contains(if_true6_end));
+            assertTrue(content.contains(if_false6_end));
+            assertTrue(content.contains(while5_backjump));
+            assertTrue(content.contains(while5_end));
+
+            assertTrue(content.lastIndexOf(while5) < content.lastIndexOf(condition5));
+            assertTrue(content.lastIndexOf(condition5) < content.lastIndexOf(if6));
+            assertTrue(content.lastIndexOf(if6) < content.lastIndexOf(if_true6_end));
+            assertTrue(content.lastIndexOf(if_true6_end) < content.lastIndexOf(if_false6_end));
+            assertTrue(content.lastIndexOf(if_false6_end) < content.lastIndexOf(while5_backjump));
+            assertTrue(content.lastIndexOf(while5_backjump) < content.lastIndexOf(while5_end));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }
