@@ -61,12 +61,12 @@ public class CodeGenerator extends DepthFirstAdapter {
         return jasmin;
     }
 
-    private String generateCode(String full_j_filepath) {
+    private void generateCode(String full_j_filepath) {
         stackCounter = 0;
         varsOnStack = new HashMap<>();
 
         String filename = full_j_filepath.substring(full_j_filepath.lastIndexOf("\\") + 1);
-        filename = filename.substring(filename.lastIndexOf("/") + 1, filename.length() - 3);
+        filename = filename.substring(filename.lastIndexOf("/") + 1, filename.length() - 2);
         System.out.println("start generating code:");
 
         //generate program specific jasmin code
@@ -90,7 +90,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         }
 
         System.out.println("Generated " + full_j_filepath);
-        return jasminOutput;
 
     }
 
@@ -323,7 +322,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("\tifeq False").append(branchCounter).append("\n");
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
-        String label_false = "\tFalse" + branchCounter + ":\n";
+        String label_false = "False" + branchCounter + ":\n";
 
         aTrue.apply(this);
 
@@ -344,8 +343,8 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
-        String label_else = "\tElse" + branchCounter + ":\n";
-        String label_after_else = "\tL" + branchCounter + ":\n";
+        String label_else = "Else" + branchCounter + ":\n";
+        String label_after_else = "L" + branchCounter + ":\n";
 
         branchCounter++;
 
@@ -372,8 +371,8 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
-        String label_else = "\tElse" + branchCounter + ":\n";
-        String label_after_else = "\tL" + branchCounter + ":\n";
+        String label_else = "Else" + branchCounter + ":\n";
+        String label_after_else = "L" + branchCounter + ":\n";
 
         branchCounter++;
 
@@ -396,9 +395,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String goto_loop_finished = "\tifeq Done" + branchCounter + "\n";
         String goto_loop_start_and_finish_label = "\tgoto While" + branchCounter + "\n" +
-                "\tDone" + branchCounter + ":\n";
+                "Done" + branchCounter + ":\n";
 
-        jasminString.append("\tWhile").append(branchCounter).append(":\n");
+        jasminString.append("While").append(branchCounter).append(":\n");
         condition.apply(this);
         jasminString.append(goto_loop_finished);
         aTrue.apply(this);
@@ -416,9 +415,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         // count up and fucks up order
         String goto_loop_finished = "\tifeq Done" + branchCounter + "\n";
         String goto_loop_start_and_finish_label = "\tgoto While" + branchCounter + "\n" +
-                "\tDone" + branchCounter + ":\n";
+                "Done" + branchCounter + ":\n";
 
-        jasminString.append("\tWhile").append(branchCounter).append(":\n");
+        jasminString.append("While").append(branchCounter).append(":\n");
         condition.apply(this);
         jasminString.append(goto_loop_finished);
         aTrue.apply(this);
@@ -650,11 +649,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tiflt Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -684,11 +683,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tifgt Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -717,11 +716,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tifle Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -750,11 +749,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tifge Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -786,11 +785,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tifeq Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -822,11 +821,11 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\tdcmpg\n" +
                 "\tifne Else").append(branchCounter).append("\n" +
-                "" + "\ticonst_0\n" +
+                "\ticonst_0\n" +
                 "\tgoto L").append(branchCounter).append("\n" +
-                "\tElse").append(branchCounter).append(":\n" +
+                "Else").append(branchCounter).append(":\n" +
                 "\ticonst_1\n" +
-                "\tL").append(branchCounter).append(":\n");
+                "L").append(branchCounter).append(":\n");
 
         branchCounter++;
 
@@ -905,9 +904,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("\tifeq UseFalse").append(stackCounter).append("\n" +
                 "\tldc \"true\"\n" +
                 "\tgoto L").append(stackCounter).append("\n" +
-                "\tUseFalse").append(stackCounter).append(":\n" +
+                "UseFalse").append(stackCounter).append(":\n" +
                 "\tldc \"false\"\n" +
-                "\tL").append(stackCounter).append(":\n");
+                "L").append(stackCounter).append(":\n");
         stackCounter++;
         topStackPeek.pop();
         topStackPeek.push(BOOLEAN);
