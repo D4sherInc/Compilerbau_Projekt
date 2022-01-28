@@ -30,7 +30,7 @@ public class StupsParserTest {
 
     @Test
     public void addInt() throws IOException, LexerException {
-        setUpStupsParser(Path.of("src/main/test/cs/AddInt0_parseError.cs"));
+        setUpStupsParser(Path.of("src/main/test/cs/parsertests/AddInt0_parseError.cs"));
         try {
             stupsParser.parse();
             fail("missing ParseException");
@@ -41,7 +41,7 @@ public class StupsParserTest {
 
     @Test
     public void addInt2() throws IOException, LexerException {
-        setUpStupsParser(Path.of("src/main/test/cs/AddInt1_parseError.cs"));
+        setUpStupsParser(Path.of("src/main/test/cs/parsertests/AddInt1_parseError.cs"));
         try {
             stupsParser.parse();
             fail("missing ParseException");

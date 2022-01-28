@@ -27,7 +27,7 @@ public class StupsLexerTest {
 
     @Test
     public void lex_unknownToken() throws IOException {
-        StupsLexer stupsLexer = new StupsLexer(Path.of("src/main/test/cs/lex_unknownToken.cs"));
+        StupsLexer stupsLexer = new StupsLexer(Path.of("src/main/test/cs/lexertests/lex_unknownToken.cs"));
         try{
             stupsLexer.lex();
             fail("missing LexerException: 'Unknown Token'");

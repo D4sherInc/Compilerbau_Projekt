@@ -39,7 +39,7 @@ public class StupsTypeCheckerTest {
     @Test
     // assign int = int + bool (fail)
     public void addInt() throws ParserException, IOException, LexerException {
-        setUpTypeChecker(Path.of("src/main/test/cs/AddInt2_typeError.cs"));
+        setUpTypeChecker(Path.of("src/main/test/cs/typecheckertests/AddInt2_typeError.cs"));
 
         try{
             stupsTypeChecker.typechecking();
