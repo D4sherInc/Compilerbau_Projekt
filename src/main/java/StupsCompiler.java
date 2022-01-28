@@ -21,7 +21,7 @@ public class StupsCompiler {
                 // java StupsCompiler minimal.cs
 
                 String filename = path_to_file.toString();
-                filename = filename.substring(filename.lastIndexOf("/")+1, filename.length()-3);
+                filename = filename.substring(filename.lastIndexOf("/")+1);
 
                 // if wrong path: IOException in StupsLexer
                 StupsLexer stupsLexer = new StupsLexer(path_to_file);
