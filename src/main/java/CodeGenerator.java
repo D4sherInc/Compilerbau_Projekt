@@ -41,9 +41,9 @@ public class CodeGenerator extends DepthFirstAdapter {
     private final Stack<Type> topStackPeek;
     private int branchCounter;
 
-    public CodeGenerator(SymbolTable symbolTable, Start tree, String filepath) {
-        String filename = filepath + ".j";
-        this.jasmin = new File(filename);
+    public CodeGenerator(SymbolTable symbolTable, Start tree, String full_cs_filepath) {
+        String full_j_filepath = full_cs_filepath.substring(0, full_cs_filepath.length() - 3) + ".j";
+        this.jasmin = new File(full_j_filepath);
         this.tree = tree;
         this.method_vars = new HashMap<>();
         this.symbolTable = symbolTable;
@@ -53,7 +53,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         for (String method_name : symbolTable.getMethodInfos().keySet()) {
             method_vars.put(method_name, symbolTable.get_var_and_param_names(method_name));
         }
-        generateCode(filepath);
+        generateCode(full_j_filepath);
     }
 
     public File getJasmin() {
@@ -61,12 +61,12 @@ public class CodeGenerator extends DepthFirstAdapter {
         return jasmin;
     }
 
-    private String generateCode(String filepath) {
+    private String generateCode(String full_j_filepath) {
         stackCounter = 0;
         varsOnStack = new HashMap<>();
 
-        String filename = filepath.substring(filepath.lastIndexOf("\\") + 1);
-        filename = filename.substring(filename.lastIndexOf("/") + 1);
+        String filename = full_j_filepath.substring(full_j_filepath.lastIndexOf("\\") + 1);
+        filename = filename.substring(filename.lastIndexOf("/") + 1, filename.length() - 3);
         System.out.println("start generating code:");
 
         //generate program specific jasmin code
@@ -89,7 +89,7 @@ public class CodeGenerator extends DepthFirstAdapter {
             e.printStackTrace();
         }
 
-        System.out.println("Generated " + filepath + ".j");
+        System.out.println("Generated " + full_j_filepath);
         return jasminOutput;
 
     }
