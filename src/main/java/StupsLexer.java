@@ -7,6 +7,7 @@ import node.Token;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class StupsLexer {
 
-    private List<String> inputAsList;
+    private final List<String> inputAsList;
 
     public StupsLexer(Path path_to_file) throws IOException {
 
@@ -22,7 +23,7 @@ public class StupsLexer {
         try{
             inputAsList = Files.lines(path_to_file).collect(Collectors.toList());
         }
-        catch (IOException e) {
+        catch (UncheckedIOException | IOException e) {
             throw new IOException(String.format("ERROR: no such file found, try another path. Path was: %s%n", path_to_file.toString()));
         }
     }
