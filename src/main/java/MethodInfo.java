@@ -19,10 +19,14 @@ public class MethodInfo {
     // for CodeGenerator: get all var names to put on stack
     public Set<String> get_var_and_param_names() {
         // all params
-        Set<String> collect = params.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+        Set<String> newCollect = new LinkedHashSet<>();
+        for (Map.Entry<String, Type> entry : params) {
+            newCollect.add(entry.getKey());
+        }
+        // Set<String> collect = params.stream().map(Map.Entry::getKey).collect(Collectors.toSet());
         // join all params with all vars
-        collect.addAll(vars.keySet());
-        return collect;
+        newCollect.addAll(vars.keySet());
+        return newCollect;
     }
 
     public List<Type> getParams() {
@@ -61,5 +65,14 @@ public class MethodInfo {
 
     public boolean var_is_init(String var_name) {
         return var_is_init.get(var_name);
+    }
+
+    // for Codegen: DOUBLEVALUES need 2 spaces on stack
+    // --> check for DOUBLEVALUE
+    public Type get_specific_param_type(String var_name) {
+        for (Map.Entry<String, Type> entry : params){
+            if (entry.getKey().equals(var_name)) return entry.getValue();
+        }
+        return null;
     }
 }
