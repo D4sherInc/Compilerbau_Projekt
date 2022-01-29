@@ -50,6 +50,44 @@ public class StupsParserTest {
         }
     }
 
+    @Test
+    public void emptyWhile() throws IOException, LexerException {
+        setUpStupsParser(Path.of("src/main/test/cs/parsertests/empty_while.cs"));
+        try{
+            stupsParser.parse();
+            fail("missing ParsingException");
+        } catch (ParserException e) {
+            assertTrue(e.getMessage().contains("LINE 10: found ')', expected:"));
+        }
+
+    }
+
     //TODO: more tests
+    // ExpressionEqualBool
+    // ExpressionUnequalBool
+    // FunctionCall
+    // FunctionCallWithArgs
+    // IfNoElse
+    // IfNoElse2
+    // IfWhileIf
+    // IfWhileIf2
+    // IfWhileIf3
+    // IfWhileIf4
+    // IfWithElse
+    // IfWithElseNoBlock
+    // IfWithIntExpression
+    // IfWithIntExpression2
+    // IfWithIntExpression3
+    // IfWithStringExpression
+    // IfWithStringExpression2
+    // NestedCalls                  !
+    // WhileIf
+    // WhileIf2
+    // WhileIf3
+    // WhileIf4
+    // WhileWithBoolExpression
+    // WhileWithIntExpression
+    // WhileWithIntExpression2
+    //
 
 }

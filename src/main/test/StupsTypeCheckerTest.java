@@ -49,4 +49,7 @@ public class StupsTypeCheckerTest {
         }
     }
 
+    //TODO: more tests
+    // PutDoubleInInt
+
 }
