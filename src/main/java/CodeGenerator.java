@@ -505,6 +505,24 @@ public class CodeGenerator extends DepthFirstAdapter {
             argument.apply(this);
         }
 
+        List<Type> params = symbolTable.get_params(invoked_method);
+        for (Type t : params) {
+            switch (t) {
+                case INTEGER:
+                    invoke_arguments.append("I");
+                    break;
+                case DOUBLE:
+                    invoke_arguments.append("D");
+                    break;
+                case BOOLEAN:
+                    invoke_arguments.append("Z");
+                    break;
+                case STRING:
+                    invoke_arguments.append("Ljava/lang/String;");
+                    break;
+            }
+        }
+
         jasminString.append("\tinvokestatic ").append(filename).append("/")
                 .append(invoked_method).append("(").append(invoke_arguments)
                 .append(")");
@@ -672,7 +690,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         if (currentType == INTEGER) jasminString.append("i");
         else if (currentType == DOUBLE) jasminString.append("d");
 
-        jasminString.append("add\n");
+        jasminString.append("sub\n");
     }
 
     // 3 < 4
