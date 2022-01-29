@@ -261,7 +261,7 @@ public class CodeGeneratorTest {
             assertTrue(content.lastIndexOf(args) < content.lastIndexOf(method_call));
 
 
-            //AssignStringFunctionCall
+            // AssignStringFunctionCall
             String arg_string = "ldc \"333\"";
             String method_call2 = "invokestatic invoke/AssignStringFunctionCall(Ljava/lang/String;)Ljava/lang/String;";
 
@@ -269,6 +269,54 @@ public class CodeGeneratorTest {
             assertTrue(content.contains(method_call2));
 
             assertTrue(content.lastIndexOf(arg_string) < content.lastIndexOf(method_call2));
+
+            // AssignDoubleFunctionCall
+            String arg_double = "ldc2_w 2.9";
+            String method_call3 = "invokestatic invoke/AssignDoubleFunctionCall(D)D";
+
+            assertTrue(content.contains(arg_double));
+            assertTrue(content.contains(method_call3));
+
+            assertTrue(content.lastIndexOf(arg_double) < content.lastIndexOf(method_call3));
+
+            // AssignIntFunctionCall
+            String arg_int = "ldc 7";
+            String method_call4 = "invokestatic invoke/AssignIntFunctionCall(I)I";
+
+            assertTrue(content.contains(arg_int));
+            assertTrue(content.contains(method_call4));
+
+            assertTrue(content.lastIndexOf(arg_int) < content.lastIndexOf(method_call4));
+
+            // CallInIf
+            String if_label = "ifeq Else1";
+            String if_true = "ldc 6 \n\tinvokestatic invoke/calledInIf(I)I\n\tistore";
+            String if_true_end_goto = "goto L1";
+            String else_label = "Else1:\n\tldc 3 \n\tinvokestatic invoke/calledInElse(I)I\n\tistore";
+            String end_label = "L1:";
+
+            assertTrue(content.contains(if_label));
+            assertTrue(content.contains(if_true));
+            assertTrue(content.contains(if_true_end_goto));
+            assertTrue(content.contains(else_label));
+            assertTrue(content.contains(end_label));
+
+            assertTrue(content.lastIndexOf(if_label) < content.lastIndexOf(if_true));
+            assertTrue(content.lastIndexOf(if_true) < content.lastIndexOf(if_true_end_goto));
+            assertTrue(content.lastIndexOf(if_true_end_goto) < content.lastIndexOf(else_label));
+            assertTrue(content.lastIndexOf(else_label) < content.lastIndexOf(end_label));
+
+            // CallInWhile
+            String while_label = "While2:";
+            String while_condition = "ifeq Done2";
+            String while_end = "goto While2\nDone2:";
+
+            assertTrue(content.contains(while_label));
+            assertTrue(content.contains(while_condition));
+            assertTrue(content.contains(while_end));
+
+            assertTrue(content.lastIndexOf(while_label) < content.lastIndexOf(while_condition));
+            assertTrue(content.lastIndexOf(while_condition) < content.lastIndexOf(while_end));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -304,4 +352,105 @@ public class CodeGeneratorTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testTypecast() {
+        path_to_file = Path.of(directory + "/typecast.cs") ;
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("typecast.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            // AssignDoubleToInt
+            String load_double = "ldc2_w 2.0";
+            String convert_double_to_integer = "d2i";
+            String store_double_in_int = "istore ";
+
+            assertTrue(content.contains(load_double));
+            assertTrue(content.contains(convert_double_to_integer));
+            assertTrue(content.contains(store_double_in_int));
+
+            assertTrue(content.lastIndexOf(load_double) < content.lastIndexOf(convert_double_to_integer));
+            assertTrue(content.lastIndexOf(convert_double_to_integer) < content.lastIndexOf(store_double_in_int));
+
+            // AssignIntToDouble
+            String load_integer = "ldc 3";
+            String convert_integer_to_double = "i2d";
+            String store_integer_in_double = "dstore ";
+
+            assertTrue(content.contains(load_integer));
+            assertTrue(content.contains(convert_integer_to_double));
+            assertTrue(content.contains(store_integer_in_double));
+
+            assertTrue(content.lastIndexOf(load_integer) < content.lastIndexOf(convert_integer_to_double));
+            assertTrue(content.lastIndexOf(convert_integer_to_double) < content.lastIndexOf(store_integer_in_double));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testNot() {
+        path_to_file = Path.of(directory + "/not.cs") ;
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("not.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String negation = "ifeq Not0\n\ticonst_0\n\tgoto L0\nNot0:\n\ticonst_1";
+
+            assertTrue(content.contains(negation));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    public void testOr() {
+        path_to_file = Path.of(directory + "/or.cs") ;
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("or.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String or = "iload 1\n\ticonst_0\n\tior";
+
+            assertTrue(content.contains(or));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    public void testAnd() {
+        path_to_file = Path.of(directory + "/and.cs") ;
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("and.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String and = "iload 1\n\ticonst_0\n\tiand";
+
+            assertTrue(content.contains(and));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
