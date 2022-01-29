@@ -40,7 +40,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     private String currentMethod;
     private Type currentType;
-    private final Stack<Type> topStackPeek;
+    private final Stack<Type> operand_stack;
     private int branchCounter;
 
     public CodeGenerator(SymbolTable symbolTable, Start tree, String full_cs_filepath) {
@@ -49,7 +49,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         this.tree = tree;
         this.method_vars = new HashMap<>();
         this.symbolTable = symbolTable;
-        this.topStackPeek = new Stack<>();
+        this.operand_stack = new Stack<>();
 
         // add all vars in HashMap
         for (String method_name : symbolTable.getMethodInfos().keySet()) {
@@ -59,7 +59,7 @@ public class CodeGenerator extends DepthFirstAdapter {
     }
 
     public File getJasmin() {
-        System.out.println("\n\nfinal stack: \n" + topStackPeek.toString());
+        System.out.println("\n\nfinal stack: \n" + operand_stack.toString());
         return jasmin;
     }
 
@@ -179,7 +179,6 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("\t.end method\n" +
                 "\n");
 
-        topStackPeek.pop();
         currentMethod = null;
     }
 
@@ -234,7 +233,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if(currentType == STRING) jasminString.append("a");
 
         jasminString.append("store ").append(currentIdentifierNum).append("\n");
-        topStackPeek.pop();
+        operand_stack.pop();
     }
 
     @Override
@@ -262,6 +261,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("return\n");
         currentType = null;
+        operand_stack.pop();
     }
 
     // int i;
@@ -291,7 +291,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == STRING) jasminString.append("a");
 
         jasminString.append("store ").append(currentIdentifierNum).append("\n");
-        topStackPeek.pop();
+        operand_stack.pop();
 
     }
 
@@ -304,15 +304,15 @@ public class CodeGenerator extends DepthFirstAdapter {
         expressionAbstract.apply(this);
 
         // convert boolean value on top to printable value 'false' / 'true'
-        if (topStackPeek.peek() == BOOLEAN) swap_int_and_bool_on_top_of_stack();
+        if (operand_stack.peek() == BOOLEAN) swap_int_and_bool_on_top_of_stack();
 
         jasminString.append("\tinvokevirtual java/io/PrintStream/println(");
-        if (topStackPeek.peek() == STRING || topStackPeek.peek() == BOOLEAN) jasminString.append("Ljava/lang/String;");
-        else if (topStackPeek.peek() == INTEGER) jasminString.append("I");
-        else if (topStackPeek.peek() == DOUBLE) jasminString.append("D");
+        if (operand_stack.peek() == STRING || operand_stack.peek() == BOOLEAN) jasminString.append("Ljava/lang/String;");
+        else if (operand_stack.peek() == INTEGER) jasminString.append("I");
+        else if (operand_stack.peek() == DOUBLE) jasminString.append("D");
         jasminString.append(")V\n");
 
-        topStackPeek.pop();
+        operand_stack.pop();
     }
 
     @Override
@@ -323,6 +323,8 @@ public class CodeGenerator extends DepthFirstAdapter {
         condition.apply(this);
 
         jasminString.append("\tifeq False").append(branchCounter).append("\n");
+        operand_stack.pop();
+
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String label_false = "False" + branchCounter + ":\n";
@@ -343,6 +345,8 @@ public class CodeGenerator extends DepthFirstAdapter {
         condition.apply(this);
 
         jasminString.append("\tifeq Else").append(branchCounter).append("\n");
+        operand_stack.pop();
+
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
@@ -376,6 +380,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         condition.apply(this);
 
         jasminString.append("\tifeq Else").append(branchCounter).append("\n");
+        operand_stack.pop();
 
         // save counter outside of loop, so that the code inside the while does not count up and fucks up order
         String gotoEnd_after_finishing_ifTrue = "\tgoto L" + branchCounter + "\n";
@@ -411,9 +416,14 @@ public class CodeGenerator extends DepthFirstAdapter {
                 "Done" + branchCounter + ":\n";
 
         jasminString.append("While").append(branchCounter).append(":\n");
+
         condition.apply(this);
+
         jasminString.append(goto_loop_finished);
+        operand_stack.pop();
+
         aTrue.apply(this);
+
         jasminString.append(goto_loop_start_and_finish_label);
 
         branchCounter++;
@@ -431,9 +441,14 @@ public class CodeGenerator extends DepthFirstAdapter {
                 "Done" + branchCounter + ":\n";
 
         jasminString.append("While").append(branchCounter).append(":\n");
+
         condition.apply(this);
+
         jasminString.append(goto_loop_finished);
+        operand_stack.pop();
+
         aTrue.apply(this);
+
         jasminString.append(goto_loop_start_and_finish_label);
 
         branchCounter++;
@@ -450,25 +465,25 @@ public class CodeGenerator extends DepthFirstAdapter {
         String bool_val = node.getBool().getText();
         if (bool_val.equals("false")) jasminString.append("0\n");
         else jasminString.append("1\n");
-        topStackPeek.push(BOOLEAN);
+        operand_stack.push(BOOLEAN);
     }
 
     @Override
     public void caseAIntLiteralAbstract(AIntLiteralAbstract node) {
         jasminString.append("\tldc ").append(node.getIntValue()).append("\n");
-        topStackPeek.push(INTEGER);
+        operand_stack.push(INTEGER);
     }
 
     @Override
     public void caseADoubleLiteralAbstract(ADoubleLiteralAbstract node) {
         jasminString.append("\tldc2_w ").append(node.getDoubleValue()).append("\n");
-        topStackPeek.push(DOUBLE);
+        operand_stack.push(DOUBLE);
     }
 
     @Override
     public void caseAStringLiteralAbstract(AStringLiteralAbstract node) {
         jasminString.append("\tldc ").append(node.getStringLiteral()).append("\n");
-        topStackPeek.push(STRING);
+        operand_stack.push(STRING);
     }
 
     @Override
@@ -507,6 +522,8 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         List<Type> params = symbolTable.get_params(invoked_method);
         for (Type t : params) {
+            operand_stack.pop();
+
             switch (t) {
                 case INTEGER:
                     invoke_arguments.append("I");
@@ -543,6 +560,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         }
 
         jasminString.append("\n");
+        operand_stack.push(return_type);
     }
 
     @Override
@@ -551,7 +569,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         String var_name = identifier.getText();
         Type var_type = symbolTable.getMethodInfos().get(currentMethod).get_var(var_name);
 
-        topStackPeek.push(var_type);
+        operand_stack.push(var_type);
 
         jasminString.append("\t");
 
@@ -591,15 +609,24 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         expressionAbstract.apply(this);
 
-        if (topStackPeek.peek() == INTEGER) jasminString.append("\ti");
-        else if (topStackPeek.peek() == DOUBLE) jasminString.append("\td");
+        if (operand_stack.peek() == INTEGER) jasminString.append("\ti");
+        else if (operand_stack.peek() == DOUBLE) jasminString.append("\td");
 
         jasminString.append("neg\n");
     }
 
     @Override
     public void caseANotExpressionAbstract(ANotExpressionAbstract node) {
-        super.caseANotExpressionAbstract(node);
+        PExpressionAbstract expressionAbstract = node.getExpressionAbstract();
+        expressionAbstract.apply(this);
+        jasminString.append("\tifeq Not").append(branchCounter).append("\n" +
+                "\ticonst_0\n" +
+                "\tgoto L").append(branchCounter).append("\n" +
+                "Not").append(branchCounter).append(":\n" +
+                "\ticonst_1\n" +
+                "L").append(branchCounter).append(":\n");
+
+        branchCounter++;
     }
 
     @Override
@@ -618,6 +645,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("mul\n");
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(currentType);
     }
 
     @Override
@@ -636,6 +666,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("div\n");
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(currentType);
     }
 
     @Override
@@ -655,6 +688,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("rem\n");
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(currentType);
     }
 
     @Override
@@ -673,6 +709,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("add\n");
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(currentType);
     }
 
     @Override
@@ -689,6 +728,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         else if (currentType == DOUBLE) jasminString.append("d");
 
         jasminString.append("sub\n");
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(currentType);
     }
 
     // 3 < 4
@@ -698,16 +740,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -720,9 +762,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
 
     }
 
@@ -732,16 +774,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -754,9 +796,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
     }
 
     @Override
@@ -765,16 +807,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -787,9 +829,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
     }
 
     @Override
@@ -798,16 +840,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -820,9 +862,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
     }
 
     @Override
@@ -834,16 +876,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -856,9 +898,9 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
     }
 
     @Override
@@ -870,16 +912,16 @@ public class CodeGenerator extends DepthFirstAdapter {
         PExpressionAbstract right = node.getRight();
 
         left.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
         right.apply(this);
-        if (topStackPeek.peek() == INTEGER) {
+        if (operand_stack.peek() == INTEGER) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
 
         jasminString.append("\tdcmpg\n" +
@@ -892,20 +934,33 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         branchCounter++;
 
-        topStackPeek.pop();
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);    }
+        operand_stack.pop();
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);    }
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
-        //TODO
-        super.caseAAndExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        right.apply(this);
+
+        jasminString.append("\tiand\n");
+
+        operand_stack.pop();
     }
 
     @Override
     public void caseAOrExpressionAbstract(AOrExpressionAbstract node) {
-        //TODO
-        super.caseAOrExpressionAbstract(node);
+        PExpressionAbstract left = node.getLeft();
+        PExpressionAbstract right = node.getRight();
+
+        left.apply(this);
+        right.apply(this);
+
+        jasminString.append("\tior\n");
+        operand_stack.pop();
     }
 
     @Override
@@ -953,15 +1008,15 @@ public class CodeGenerator extends DepthFirstAdapter {
     // is value on top of stack int and var in stack double? -> i2d
     // is value on top of stack double and var in stack int? -> d2i
     private void check_for_typecast() {
-        if (topStackPeek.peek() == INTEGER && currentType == DOUBLE) {
+        if (operand_stack.peek() == INTEGER && currentType == DOUBLE) {
             jasminString.append("\ti2d\n");
-            topStackPeek.pop();
-            topStackPeek.push(DOUBLE);
+            operand_stack.pop();
+            operand_stack.push(DOUBLE);
         }
-        else if (topStackPeek.peek() == DOUBLE && currentType == INTEGER) {
+        else if (operand_stack.peek() == DOUBLE && currentType == INTEGER) {
             jasminString.append("\td2i\n");
-            topStackPeek.pop();
-            topStackPeek.push(INTEGER);
+            operand_stack.pop();
+            operand_stack.push(INTEGER);
         }
     }
 
@@ -976,8 +1031,8 @@ public class CodeGenerator extends DepthFirstAdapter {
                 "\tldc \"false\"\n" +
                 "L").append(stackCounter).append(":\n");
         stackCounter++;
-        topStackPeek.pop();
-        topStackPeek.push(BOOLEAN);
+        operand_stack.pop();
+        operand_stack.push(BOOLEAN);
     }
 
 
