@@ -242,6 +242,7 @@ public class CodeGeneratorTest {
         try {
             String content = Files.readString(Path.of(String.valueOf(testfile)));
 
+            // add(int x, int y)
             String arguments = "iload 1\n\tiload 2";
             String invoke = "invokestatic invoke/add(II)I";
 
@@ -249,6 +250,24 @@ public class CodeGeneratorTest {
             assertTrue(content.contains(invoke));
 
             assertTrue(content.lastIndexOf(arguments) < content.lastIndexOf(invoke));
+
+            // allTypes(int i, double d, bool b, String s
+            String arg_int = "ldc 1";
+            String arg_double = "ldc2_w 2.0";
+            String arg_bool = "iconst_1";
+            String arg_string = "ldc \"all works\"";
+            String method_call = "invokestatic invoke/allTypes(IDZLjava/lang/String;)Z";
+
+            assertTrue(content.contains(arg_int));
+            assertTrue(content.contains(arg_double));
+            assertTrue(content.contains(arg_bool));
+            assertTrue(content.contains(arg_string));
+            assertTrue(content.contains(method_call));
+
+            assertTrue(content.lastIndexOf(arg_int) < content.lastIndexOf(arg_double));
+            assertTrue(content.lastIndexOf(arg_double) < content.lastIndexOf(arg_bool));
+            assertTrue(content.indexOf(arg_bool) < content.lastIndexOf(arg_string));
+            assertTrue(content.lastIndexOf(arg_string) < content.lastIndexOf(method_call));
 
         } catch (IOException e) {
             e.printStackTrace();
