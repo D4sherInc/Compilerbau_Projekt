@@ -11,6 +11,7 @@ namespace HelloWorld
             int c = add(a,b);
             Console.WriteLine(c);
             bool d = allTypes(1, 2.0, true, "all works");
+            string st = AssignStringFunctionCall("333");
         }
 
         static int add(int x, int y)
@@ -25,6 +26,12 @@ namespace HelloWorld
             Console.WriteLine(b);
             Console.WriteLine(s);
             return true;
+        }
+
+        //AssignStringFunctionCall
+        static string AssignStringFunctionCall(string s)
+        {
+            return s;
         }
 
     }

@@ -49,7 +49,7 @@ public class CodeGeneratorTest {
             assertTrue(content
                     .contains(".method public static main([Ljava/lang/String;)V\n" +
                     "\t.limit stack 20\n" +
-                    "\t.limit locals 1\n" +
+                    "\t.limit locals 10\n" +
                     "\treturn\n" +
                     "\t.end method"));
 
@@ -243,7 +243,7 @@ public class CodeGeneratorTest {
             String content = Files.readString(Path.of(String.valueOf(testfile)));
 
             // add(int x, int y)
-            String arguments = "iload 1\n\tiload 2";
+            String arguments = "iload 1\n\tiload 3";
             String invoke = "invokestatic invoke/add(II)I";
 
             assertTrue(content.contains(arguments));
@@ -253,12 +253,22 @@ public class CodeGeneratorTest {
 
             // allTypes(int i, double d, bool b, String s
             String args = "ldc 1 \n\tldc2_w 2.0 \n\ticonst_1\n\tldc \"all works\"";
-            String method_call = "invokestatic invoke/allTypes(IDZLjava/lang/String;)Z";
+            String method_call = "invokestatic invoke/allTypes(IDILjava/lang/String;)I";
 
             assertTrue(content.contains(args));
             assertTrue(content.contains(method_call));
 
             assertTrue(content.lastIndexOf(args) < content.lastIndexOf(method_call));
+
+
+            //AssignStringFunctionCall
+            String arg_string = "ldc \"333\"";
+            String method_call2 = "invokestatic invoke/AssignStringFunctionCall(Ljava/lang/String;)Ljava/lang/String;";
+
+            assertTrue(content.contains(arg_string));
+            assertTrue(content.contains(method_call2));
+
+            assertTrue(content.lastIndexOf(arg_string) < content.lastIndexOf(method_call2));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -289,7 +299,6 @@ public class CodeGeneratorTest {
             assertTrue(content.indexOf(method_call_1) < content.indexOf(method_call_2));
             assertTrue(content.indexOf(method_call_2) < content.indexOf(recursive_call1));
             assertTrue(content.indexOf(recursive_call1) < content.indexOf(recursive_call2));
-
 
         } catch (IOException e) {
             e.printStackTrace();

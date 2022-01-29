@@ -15,7 +15,6 @@ public class CodeGenerator extends DepthFirstAdapter {
     private String filename;
     private final Start tree;
     private final SymbolTable symbolTable;
-    private StringBuilder invoke_arguments = new StringBuilder();
 
     private StringBuilder jasminString;
 
@@ -133,7 +132,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         PStatementAbstract statementAbstract = node.getStatementAbstract();
         jasminString.append(".method public static main([Ljava/lang/String;)V\n" +
                 "\t.limit stack 20\n" +
-                "\t.limit locals ").append(varsOnStack.keySet().size() + 1).append("\n");
+                "\t.limit locals ").append(varsOnStack.keySet().size() + 10).append("\n");
         statementAbstract.apply(this);
 
         jasminString.append("\treturn\n" +
@@ -159,7 +158,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         for (Type t : symbolTable.getMethodInfos().get(currentMethod).getParams()) {
             if (t == INTEGER) jasminString.append("I");
             else if(t == DOUBLE) jasminString.append("D");
-            else if(t == BOOLEAN) jasminString.append("Z");
+            else if(t == BOOLEAN) jasminString.append("I");
             else if(t == STRING) jasminString.append("Ljava/lang/String;");
         }
         jasminString.append(")");
@@ -168,7 +167,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         Type returnType = symbolTable.get_method_return_type(currentMethod);
         if (returnType == INTEGER) jasminString.append("I");
         else if(returnType == DOUBLE) jasminString.append("D");
-        else if(returnType == BOOLEAN) jasminString.append("Z");
+        else if(returnType == BOOLEAN) jasminString.append("I");
         else if(returnType == STRING) jasminString.append("Ljava/lang/String;");
         else if(returnType == VOID) jasminString.append("V");
 
@@ -199,7 +198,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         for (Type t : symbolTable.getMethodInfos().get(currentMethod).getParams()) {
             if (t == INTEGER) jasminString.append("I");
             else if(t == DOUBLE) jasminString.append("D");
-            else if(t == BOOLEAN) jasminString.append("Z");
+            else if(t == BOOLEAN) jasminString.append("I");
             else if(t == STRING) jasminString.append("Ljava/lang/String;");
         }
         // return type = void -> V
@@ -310,6 +309,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         jasminString.append("\tinvokevirtual java/io/PrintStream/println(");
         if (topStackPeek.peek() == STRING || topStackPeek.peek() == BOOLEAN) jasminString.append("Ljava/lang/String;");
         else if (topStackPeek.peek() == INTEGER) jasminString.append("I");
+        else if (topStackPeek.peek() == DOUBLE) jasminString.append("D");
         jasminString.append(")V\n");
 
         topStackPeek.pop();
@@ -499,7 +499,7 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         String invoked_method = identifier.getText();
         Type return_type = symbolTable.get_method_return_type(identifier.getText());
-        invoke_arguments = new StringBuilder();
+        StringBuilder invoke_arguments = new StringBuilder();
 
         for (PArgumentListAbstract argument : arguments) {
             argument.apply(this);
@@ -515,7 +515,7 @@ public class CodeGenerator extends DepthFirstAdapter {
                     invoke_arguments.append("D");
                     break;
                 case BOOLEAN:
-                    invoke_arguments.append("Z");
+                    invoke_arguments.append("I");
                     break;
                 case STRING:
                     invoke_arguments.append("Ljava/lang/String;");
@@ -535,7 +535,7 @@ public class CodeGenerator extends DepthFirstAdapter {
                 jasminString.append("D");
                 break;
             case BOOLEAN:
-                jasminString.append("Z");
+                jasminString.append("I");
                 break;
             case STRING:
                 jasminString.append("Ljava/lang/String;");
@@ -555,8 +555,6 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\t");
 
-        //TODO:
-        // figure out a way to not dynamically append to invoked_arguments if not invoking
         switch(var_type) {
             case INTEGER:
                 jasminString.append("i");
@@ -944,6 +942,9 @@ public class CodeGenerator extends DepthFirstAdapter {
         varsOnStack = new HashMap<>();
         for (String var_name : method_vars.get(method_name)) {
             varsOnStack.put(var_name, stackCounter);
+            // DOUBLE needs 2 spaces because it is FAT
+            if (symbolTable.getMethodInfos().get(method_name).get_specific_param_type(var_name) == DOUBLE)
+                stackCounter++;
             stackCounter++;
         }
     }
