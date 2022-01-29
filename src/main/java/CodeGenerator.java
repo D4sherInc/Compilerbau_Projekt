@@ -353,12 +353,17 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         aTrue.apply(this);
 
-        jasminString.append(gotoEnd_after_finishing_ifTrue);
+        // if 'if' has return at the end, don't add label
+        String checkReturn = jasminString.toString();
+        int return_size = checkReturn.length();
+        int return_index = checkReturn.lastIndexOf("return");
+
+        if (return_size != return_index + 7) jasminString.append(gotoEnd_after_finishing_ifTrue);
         jasminString.append(label_else);
 
         aFalse.apply(this);
 
-        jasminString.append(label_after_else);
+        if (return_size != return_index + 7) jasminString.append(label_after_else);
 
     }
 
@@ -381,12 +386,17 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         aTrue.apply(this);
 
-        jasminString.append(gotoEnd_after_finishing_ifTrue);
+        // if 'if' has return at the end, don't add label
+        String checkReturn = jasminString.toString();
+        int return_size = checkReturn.length();
+        int return_index = checkReturn.lastIndexOf("return");
+
+        if (return_size != return_index + 7) jasminString.append(gotoEnd_after_finishing_ifTrue);
         jasminString.append(label_else);
 
         aFalse.apply(this);
 
-        jasminString.append(label_after_else);
+        if (return_size != return_index + 7) jasminString.append(label_after_else);
 
     }
 
@@ -532,19 +542,15 @@ public class CodeGenerator extends DepthFirstAdapter {
         switch(var_type) {
             case INTEGER:
                 jasminString.append("i");
-                invoke_arguments.append("I");
                 break;
             case BOOLEAN:
                 jasminString.append("i");
-                invoke_arguments.append("Z");
                 break;
             case DOUBLE:
                 jasminString.append("d");
-                invoke_arguments.append("D");
                 break;
             case STRING:
                 jasminString.append("a");
-                invoke_arguments.append("Ljava/lang/String;");
                 break;
         }
         int currentIdentifierNum = varsOnStack.get(identifier.getText());
@@ -556,7 +562,6 @@ public class CodeGenerator extends DepthFirstAdapter {
     @Override
     public void caseALiteralExpressionAbstract(ALiteralExpressionAbstract node) {
         node.getLiteralAbstract().apply(this);
-
     }
 
     @Override
@@ -877,11 +882,13 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
+        //TODO
         super.caseAAndExpressionAbstract(node);
     }
 
     @Override
     public void caseAOrExpressionAbstract(AOrExpressionAbstract node) {
+        //TODO
         super.caseAOrExpressionAbstract(node);
     }
 
