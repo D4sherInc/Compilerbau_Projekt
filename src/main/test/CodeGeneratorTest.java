@@ -254,4 +254,35 @@ public class CodeGeneratorTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testFibonacci() {
+        path_to_file = Path.of(directory + "/fibonacci.cs");
+        testfile = setUpCodeGenerator(path_to_file);
+
+        assertEquals("fibonacci.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+
+            String method_call_1 =  "ldc 5 \n\tinvokestatic fibonacci/Fib(I)I";
+            String method_call_2 = "ldc 10 \n\tinvokestatic fibonacci/Fib(I)I";
+            String recursive_call1 = "\tiload 0\n\tldc 1 \n\tisub\n\tinvokestatic fibonacci/Fib(I)I";
+            String recursive_call2 = "\tiload 0\n\tldc 2 \n\tisub\n\tinvokestatic fibonacci/Fib(I)I";
+
+            assertTrue(content.contains(method_call_1));
+            assertTrue(content.contains(method_call_2));
+            assertTrue(content.contains(recursive_call1));
+            assertTrue(content.contains(recursive_call2));
+
+            assertTrue(content.indexOf(method_call_1) < content.indexOf(method_call_2));
+            assertTrue(content.indexOf(method_call_2) < content.indexOf(recursive_call1));
+            assertTrue(content.indexOf(recursive_call1) < content.indexOf(recursive_call2));
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
