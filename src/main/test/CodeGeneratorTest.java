@@ -226,4 +226,32 @@ public class CodeGeneratorTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testInvoke() {
+        path_to_file = Path.of(directory  + "/invoke.cs");
+        testfile = setUpCodeGenerator(path_to_file);
+
+        assertEquals("invoke.j", testfile.getName());
+
+//        int c = add(a,b);
+//        static int add(int x, int y)
+//        {
+//            return x + y;
+//        }
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String arguments = "iload 1\n\tiload 2";
+            String invoke = "invokestatic invoke/add(II)I";
+
+            assertTrue(content.contains(arguments));
+            assertTrue(content.contains(invoke));
+
+            assertTrue(content.lastIndexOf(arguments) < content.lastIndexOf(invoke));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
