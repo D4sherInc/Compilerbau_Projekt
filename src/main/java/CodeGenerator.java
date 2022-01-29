@@ -12,8 +12,11 @@ import java.util.*;
 public class CodeGenerator extends DepthFirstAdapter {
 
     private final File jasmin;
+    private String filename;
     private final Start tree;
     private final SymbolTable symbolTable;
+    private StringBuilder invoke_arguments = new StringBuilder();
+
     private StringBuilder jasminString;
 
 
@@ -65,7 +68,7 @@ public class CodeGenerator extends DepthFirstAdapter {
         stackCounter = 0;
         varsOnStack = new HashMap<>();
 
-        String filename = full_j_filepath.substring(full_j_filepath.lastIndexOf("\\") + 1);
+        filename = full_j_filepath.substring(full_j_filepath.lastIndexOf("\\") + 1);
         filename = filename.substring(filename.lastIndexOf("/") + 1, filename.length() - 2);
         System.out.println("start generating code:");
 
@@ -480,7 +483,38 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAInvokeExpressionAbstract(AInvokeExpressionAbstract node) {
-        super.caseAInvokeExpressionAbstract(node);
+
+        TIdentifier identifier = node.getIdentifier();
+        LinkedList<PArgumentListAbstract> arguments = node.getArguments();
+
+        String invoked_method = identifier.getText();
+        Type return_type = symbolTable.get_method_return_type(identifier.getText());
+        invoke_arguments = new StringBuilder();
+
+        for (PArgumentListAbstract argument : arguments) {
+            argument.apply(this);
+        }
+
+        jasminString.append("\tinvokestatic ").append(filename).append("/")
+                .append(invoked_method).append("(").append(invoke_arguments)
+                .append(")");
+
+        switch (return_type) {
+            case INTEGER:
+                jasminString.append("I");
+                break;
+            case DOUBLE:
+                jasminString.append("D");
+                break;
+            case BOOLEAN:
+                jasminString.append("Z");
+                break;
+            case STRING:
+                jasminString.append("Ljava/lang/String;");
+                break;
+        }
+
+        jasminString.append("\n");
     }
 
     @Override
@@ -493,16 +527,24 @@ public class CodeGenerator extends DepthFirstAdapter {
 
         jasminString.append("\t");
 
+        //TODO:
+        // figure out a way to not dynamically append to invoked_arguments if not invoking
         switch(var_type) {
             case INTEGER:
+                jasminString.append("i");
+                invoke_arguments.append("I");
+                break;
             case BOOLEAN:
                 jasminString.append("i");
+                invoke_arguments.append("Z");
                 break;
             case DOUBLE:
                 jasminString.append("d");
+                invoke_arguments.append("D");
                 break;
             case STRING:
                 jasminString.append("a");
+                invoke_arguments.append("Ljava/lang/String;");
                 break;
         }
         int currentIdentifierNum = varsOnStack.get(identifier.getText());
