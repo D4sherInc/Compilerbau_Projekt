@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StupsTypeCheckerTest {
 
+    private String sub_directory = "src/main/test/cs/";
+    private String test_directory = sub_directory + "/typecheckertests";
     private StupsTypeChecker stupsTypeChecker;
 
     @Before
@@ -28,7 +30,7 @@ public class StupsTypeCheckerTest {
     @Test
     // all valid int operations in one go
     public void addInt_all_correct() throws ParserException, IOException, LexerException {
-        setUpTypeChecker(Path.of("src/main/test/cs/AddInt_allValid.cs"));
+        setUpTypeChecker(Path.of(sub_directory + "/AddInt_allValid.cs"));
         try {
             stupsTypeChecker.typechecking();
         } catch (TypeCheckerException e) {
@@ -39,7 +41,7 @@ public class StupsTypeCheckerTest {
     @Test
     // assign int = int + bool (fail)
     public void addInt() throws ParserException, IOException, LexerException {
-        setUpTypeChecker(Path.of("src/main/test/cs/typecheckertests/AddInt2_typeError.cs"));
+        setUpTypeChecker(Path.of(test_directory + "/AddInt2_typeError.cs"));
 
         try{
             stupsTypeChecker.typechecking();
