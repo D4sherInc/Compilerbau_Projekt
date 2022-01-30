@@ -93,7 +93,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         currentMethod = node.getIdentifier().getText();
         symbolTable.decl_method(currentMethod, get_var_type(type));
 
-        // TODO: check each parameter for type ?
         for (PParameterListAbstract param : parameterList) param.apply(this);
         codeBlock.apply(this);
 
@@ -111,7 +110,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         currentMethod = node.getIdentifier().getText();
         symbolTable.decl_method(currentMethod, Type.VOID);
 
-        //TODO: check each parameter for type ?
         for (PParameterListAbstract param : parameterList) param.apply(this);
         codeBlock.apply(this);
     }
@@ -123,7 +121,6 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         identifier.apply(this);
 
-        // TODO: check for Identifiers type
         currentType = symbolTable.get_var(currentMethod, identifier.getText());
 
         value.apply(this);

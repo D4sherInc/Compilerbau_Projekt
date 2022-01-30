@@ -42,7 +42,6 @@ Tokens
 
     // comments
     one_line_comment = '//' (not_slash_input_char input_chars?)?;
-    // TODO
     block_comment = '/*' all_but_star* '*'+ (all_but_star_and_slash all_but_star* '*'+)* '/';
 
     // literals
@@ -285,8 +284,6 @@ Productions
                     {-> New expression_abstract.gteq(left.expression_abstract, right.expression_abstract)};
 
 
-    //TODO
-    // maybe check for && fucking it up like: "cond = true && f1 == f2"
     equality_expression {-> expression_abstract} =
                     rel_expression                                                                                  // base case
                         {-> rel_expression.expression_abstract}                                                 |
@@ -335,7 +332,6 @@ Productions
         local_var_declaration semicolon
             {-> local_var_declaration.statement_abstract};
 
-    //TODO: remove tail; only single declarations (simplification for AST)
 //    local_var_declaration {-> statement_abstract} =
 //            type var_declarator                               // int [i]
 //
