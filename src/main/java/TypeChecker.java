@@ -41,6 +41,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         currentType = null;
     }
 
+    // used in Equals and in NotEquals
     private boolean comparable(PExpressionAbstract left, PExpressionAbstract right) {
         comparing = true;
 
@@ -51,7 +52,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
 
         comparing = false;
 
-        if((l1 == INTEGER && r1 == DOUBLE) ||(l1 == DOUBLE && r1 == INTEGER)) return true;
+        if((l1 == INTEGER && r1 == DOUBLE) || (l1 == DOUBLE && r1 == INTEGER)) return true;
 
         return l1 == r1;
     }
@@ -374,7 +375,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
                 || using_value)) {
             if (!comparing)
                 throw new TypeCheckerException(String.format("Identifier: Expected Type: %s; actual: %s", currentType, id_type));
-            else throw new TypeCheckerException("Types not comparable2, can't calculate a boolean");
+            //else throw new TypeCheckerException("Types not comparable2, can't calculate a boolean");
         }
         identifier.apply(this);
         if (comparing) currentType = symbolTable.get_var(currentMethod, identifier.getText());
