@@ -1,4 +1,5 @@
 import node.Start;
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.File;
@@ -501,7 +502,11 @@ public class CodeGeneratorTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @After
+    public void cleanUp() {
+        testfile.delete();
+    }
 }

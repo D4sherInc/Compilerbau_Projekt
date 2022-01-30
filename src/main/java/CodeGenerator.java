@@ -869,9 +869,6 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAEqualsExpressionAbstract(AEqualsExpressionAbstract node) {
-        //TODO:
-        //  check for strings and booleans
-
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
@@ -918,9 +915,6 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseANotEqualsExpressionAbstract(ANotEqualsExpressionAbstract node) {
-        //TODO:
-        //  check for strings and booleans
-
         PExpressionAbstract left = node.getLeft();
         PExpressionAbstract right = node.getRight();
 
