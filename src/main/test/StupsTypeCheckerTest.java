@@ -51,6 +51,18 @@ public class StupsTypeCheckerTest {
         }
     }
 
+    @Test
+    public void testInvoke_wrong_argument_type() throws ParserException, IOException, LexerException {
+        setUpTypeChecker(Path.of(test_directory + "/invoke.cs"));
+
+        try {
+            stupsTypeChecker.typechecking();
+            fail("missing TypecheckerException: wrong type in Invoke");
+        } catch (TypeCheckerException e) {
+            assertTrue(e.getMessage().contains("Expected Type: INTEGER; actual: STRING"));
+        }
+    }
+
     //TODO: more tests
     // PutDoubleInInt
 

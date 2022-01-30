@@ -13,7 +13,7 @@ namespace HelloWorld
             bool d = allTypes(1, 2.0, true, "all works");
             string st = AssignStringFunctionCall("333");
             double e = AssignDoubleFunctionCall(2.9);
-            int i = AssignIntFunctionCall(7);
+            int i = AssignIntFunctionCall(7.0);
             string j = AssignStringFunctionCall("teststring");
 
             //CallInIf
