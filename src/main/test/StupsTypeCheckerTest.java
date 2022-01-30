@@ -63,6 +63,16 @@ public class StupsTypeCheckerTest {
         }
     }
 
+    @Test
+    public void testCompare_equalString() throws ParserException, IOException, LexerException {
+        setUpTypeChecker(Path.of(test_directory + "/compare.cs"));
+        try {
+            stupsTypeChecker.typechecking();
+        } catch (TypeCheckerException e) {
+            fail("Wrong TypecheckerException: string and string should be comparable if they are equal");
+        }
+    }
+
     //TODO: more tests
     // PutDoubleInInt
 
