@@ -353,7 +353,7 @@ public class TypeChecker extends ReversedDepthFirstAdapter {
         called_method = identifier.getText();
         Type returnType = symbolTable.get_method_return_type(called_method);
 
-        if (currentType != returnType && currentType != null)
+        if (currentType != returnType && currentType != null && !using_value)
             throw new TypeCheckerException(String.format("Return Type mismatch: expected: %s; actual: %s", currentType, returnType));
 
         for (PArgumentListAbstract argument : arguments) argument.apply(this);
