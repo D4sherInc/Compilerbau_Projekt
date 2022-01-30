@@ -453,4 +453,30 @@ public class CodeGeneratorTest {
         }
     }
 
+    @Test
+    public void testCompare_strings() {
+        path_to_file = Path.of(directory + "/compare_strings.cs");
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("compare_strings.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String if_equals = "aload 3\n\taload 4\n\tif_acmpeq Else0";
+            String if_not_equals = "aload 3\n\tldc \"no\" \n\tif_acmpne Else1";
+
+            assertTrue(content.contains(if_equals));
+            assertTrue(content.contains(if_not_equals));
+
+            assertTrue(content.indexOf(if_equals) < content.indexOf(if_not_equals));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }
