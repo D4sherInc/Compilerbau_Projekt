@@ -986,7 +986,16 @@ public class CodeGenerator extends DepthFirstAdapter {
 
     @Override
     public void caseAListArgumentListAbstract(AListArgumentListAbstract node) {
-        super.caseAListArgumentListAbstract(node);
+        PExpressionAbstract first = node.getFirst();
+        LinkedList<PExpressionAbstract> follows = node.getFollow();
+
+        first.apply(this);
+        check_for_typecast();
+
+        for (PExpressionAbstract follow : follows) {
+            follow.apply(this);
+            check_for_typecast();
+        }
     }
 
     @Override
