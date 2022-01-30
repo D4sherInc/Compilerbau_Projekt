@@ -478,5 +478,30 @@ public class CodeGeneratorTest {
         }
 
     }
+    @Test
+    public void testCompare_booleans() {
+        path_to_file = Path.of(directory + "/compare_booleans.cs");
+        setUpCodeGenerator(path_to_file);
+
+        testfile = codeGenerator.getJasmin();
+
+        assertEquals("compare_booleans.j", testfile.getName());
+
+        try {
+            String content = Files.readString(Path.of(String.valueOf(testfile)));
+
+            String if_equals = "iload 1\n\tiload 2\n\tiand";
+            String if_not_equals = "iload 1\n\ticonst_0\n\tior";
+
+            assertTrue(content.contains(if_equals));
+            assertTrue(content.contains(if_not_equals));
+
+            assertTrue(content.indexOf(if_equals) < content.indexOf(if_not_equals));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 }
