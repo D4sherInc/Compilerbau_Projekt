@@ -888,13 +888,26 @@ public class CodeGenerator extends DepthFirstAdapter {
             operand_stack.push(DOUBLE);
         }
 
-        jasminString.append("\tdcmpg\n" +
-                "\tifeq Else").append(branchCounter).append("\n" +
-                "\ticonst_0\n" +
-                "\tgoto L").append(branchCounter).append("\n" +
-                "Else").append(branchCounter).append(":\n" +
-                "\ticonst_1\n" +
-                "L").append(branchCounter).append(":\n");
+        // if numerical values are compared
+        if (operand_stack.peek() == DOUBLE) {
+            jasminString.append("\tdcmpg\n" +
+                    "\tifeq Else").append(branchCounter).append("\n" +
+                    "\ticonst_0\n" +
+                    "\tgoto L").append(branchCounter).append("\n" +
+                    "Else").append(branchCounter).append(":\n" +
+                    "\ticonst_1\n" +
+                    "L").append(branchCounter).append(":\n");
+        }
+
+        // if strings are compared
+        else if (operand_stack.peek() == STRING) {
+            jasminString.append("\tif_acmpeq Else").append(branchCounter).append("\n" +
+                    "\ticonst_0\n" +
+                    "\tgoto L").append(branchCounter).append("\n" +
+                    "Else").append(branchCounter).append(":\n" +
+                    "\ticonst_1\n" +
+                    "L").append(branchCounter).append(":\n");
+        }
 
         branchCounter++;
 
@@ -924,19 +937,33 @@ public class CodeGenerator extends DepthFirstAdapter {
             operand_stack.push(DOUBLE);
         }
 
-        jasminString.append("\tdcmpg\n" +
-                "\tifne Else").append(branchCounter).append("\n" +
-                "\ticonst_0\n" +
-                "\tgoto L").append(branchCounter).append("\n" +
-                "Else").append(branchCounter).append(":\n" +
-                "\ticonst_1\n" +
-                "L").append(branchCounter).append(":\n");
+        // if numerical values are compared
+        if (operand_stack.peek() == DOUBLE) {
+            jasminString.append("\tdcmpg\n" +
+                    "\tifne Else").append(branchCounter).append("\n" +
+                    "\ticonst_0\n" +
+                    "\tgoto L").append(branchCounter).append("\n" +
+                    "Else").append(branchCounter).append(":\n" +
+                    "\ticonst_1\n" +
+                    "L").append(branchCounter).append(":\n");
+        }
+
+        // if strings are compared
+        else if (operand_stack.peek() == STRING) {
+            jasminString.append("\tif_acmpne Else").append(branchCounter).append("\n" +
+                    "\ticonst_0\n" +
+                    "\tgoto L").append(branchCounter).append("\n" +
+                    "Else").append(branchCounter).append(":\n" +
+                    "\ticonst_1\n" +
+                    "L").append(branchCounter).append(":\n");
+        }
 
         branchCounter++;
 
         operand_stack.pop();
         operand_stack.pop();
-        operand_stack.push(BOOLEAN);    }
+        operand_stack.push(BOOLEAN);
+    }
 
     @Override
     public void caseAAndExpressionAbstract(AAndExpressionAbstract node) {
